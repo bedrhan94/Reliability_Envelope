@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Test / lint caches
+.pytest_cache/
+.ruff_cache/
+
+# Local Claude settings (per-machine permissions)
+.claude/
+
+# Local result backups (the canonical run lives in results/tables/)
+results/tables_backup_*/
+
+# Logs / scratch
+*.log

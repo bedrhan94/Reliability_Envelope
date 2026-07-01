@@ -1,0 +1,46 @@
+# Full config: adds the real GBDT baselines and ICL foundation models.
+# Requires the optional extras:  pip install -e ".[gbdt,icl]"
+# TabPFN / TabICL fetch pretrained weights on first use, so this config is NOT
+# the smoke path. Models whose package is missing are recorded status="skipped".
+seed: 42
+output_dir: results/tables
+
+datasets:
+  - breast_cancer
+  - wine
+  - iris
+  - digits
+  - synthetic_mixed
+
+models:
+  - logreg
+  - hist_gbdt
+  - xgboost
+  - catboost
+  - tabpfn_client   # TabPFN via PriorLabs cloud API (needs TABPFN_TOKEN)
+  - tabicl
+
+shift_axes:
+  - label_noise
+  - class_imbalance
+  - missingness_shift
+  - rare_category_shift
+  - covariate_shift
+  - context_budget
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost
+  - catboost
+
+max_context_rows: 1000

@@ -1,0 +1,23 @@
+# Reproducibility lock for the reliability-envelope runs (captured 2026-07-02).
+# Exact package versions used to produce results/tables. The `>=` bounds in
+# pyproject.toml define compatibility; this file pins what actually ran, so a
+# reviewer can reproduce the numbers. python==3.10.0
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.7.2
+scipy==1.15.3
+pyyaml==6.0.3
+
+# GBDT reference backends
+xgboost==3.2.0
+catboost==1.2.10
+
+# ICL foundation-model backends (TabPFN via PriorLabs cloud client; TabICL local)
+tabpfn-client==0.3.2
+tabicl==2.1.1
+torch==2.7.1+cu128
+
+# figures + dev tooling
+matplotlib==3.10.8
+pytest==9.1.1
+ruff==0.15.20
