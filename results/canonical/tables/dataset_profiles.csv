@@ -1,0 +1,6 @@
+dataset_id,n_rows,n_features,n_classes,numeric_feature_ratio,categorical_feature_ratio,mean_cardinality,max_cardinality,class_imbalance_ratio,missing_rate,duplicate_rate,train_test_duplicate_rate,feature_shift_proxy
+breast_cancer,569,30,2,1.0,0.0,0.0,0.0,1.6839622641509433,0.0,0.0,0.0,0.48701731734972736
+wine,178,13,3,1.0,0.0,0.0,0.0,1.4791666666666667,0.0,0.0,0.0,0.6132511721942616
+iris,150,4,3,1.0,0.0,0.0,0.0,1.0,0.0,0.006666666666666667,0.0,0.48380952380952386
+digits,1797,64,10,1.0,0.0,0.0,0.0,1.0517241379310345,0.0,0.0,0.0,0.49403783258198536
+synthetic_mixed,600,6,3,0.5,0.5,7.333333333333333,15.0,1.0,0.0,0.0,0.0,0.5103968253968254

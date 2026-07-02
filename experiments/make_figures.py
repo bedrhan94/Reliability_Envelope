@@ -73,17 +73,29 @@ def plot_overall_ci(multiseed: pd.DataFrame, out: Path) -> None:
     not distinguishable, so third-decimal rankings from a single seed vanish.
     """
     d = multiseed.sort_values("aure_mean", ascending=True)
+    mean = d["aure_mean"]
     colors = [_FAMILY_COLOR.get(_family(m), "#8d99ae") for m in d["model"]]
-    lo = (d["aure_mean"] - d["ci95_lo"]).clip(lower=0).to_numpy()
-    hi = (d["ci95_hi"] - d["aure_mean"]).clip(lower=0).to_numpy()
+    s_lo = (mean - d["seed_ci95_lo"]).clip(lower=0).to_numpy()
+    s_hi = (d["seed_ci95_hi"] - mean).clip(lower=0).to_numpy()
+    d_lo = (mean - d["dataset_ci95_lo"]).clip(lower=0).to_numpy()
+    d_hi = (d["dataset_ci95_hi"] - mean).clip(lower=0).to_numpy()
 
-    fig, ax = plt.subplots(figsize=(8, 0.6 * len(d) + 1.5))
-    ax.barh(d["model"], d["aure_mean"], color=colors, alpha=0.85,
-            xerr=[lo, hi], error_kw=dict(ecolor="#222", elinewidth=1.2, capsize=4))
-    n = int(d["n_seeds"].max()) if "n_seeds" in d else 0
-    ax.set_xlabel(f"AURE (mean over {n} seeds, 95% CI)  —  higher = more shift-robust")
-    ax.set_title(f"Reliability under distribution shift — {n}-seed AURE with 95% CI")
-    ax.set_xlim(0, float(d["ci95_hi"].max()) * 1.15)
+    fig, ax = plt.subplots(figsize=(8.5, 0.6 * len(d) + 1.7))
+    ax.barh(d["model"], mean, color=colors, alpha=0.85)
+    # Wide light whisker = dataset-unit CI (generalisation); tight dark whisker =
+    # seed-unit CI (within these datasets). Overlapping wide whiskers => the
+    # ordering does not generalise beyond this dataset sample.
+    ax.errorbar(mean, list(d["model"]), xerr=[d_lo, d_hi], fmt="none",
+                ecolor="#999", elinewidth=1.0, capsize=7, alpha=0.9)
+    ax.errorbar(mean, list(d["model"]), xerr=[s_lo, s_hi], fmt="none",
+                ecolor="#111", elinewidth=2.2, capsize=3)
+    n = int(d["n_seeds"].max())
+    nd = int(d["n_datasets"].max())
+    ax.set_xlabel("AURE  —  higher = more shift-robust")
+    ax.set_title(
+        f"{n}-seed AURE: dark = seed CI (within {nd} datasets), light = dataset CI (generalisation)"
+    )
+    ax.set_xlim(0, float(d["dataset_ci95_hi"].max()) * 1.12)
     handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in _FAMILY_COLOR.values()]
     ax.legend(handles, [f"{k} models" for k in _FAMILY_COLOR], loc="lower right", frameon=False)
     ax.spines[["top", "right"]].set_visible(False)
