@@ -1,0 +1,4 @@
+dataset_id,n_rows,n_features,n_classes,numeric_feature_ratio,categorical_feature_ratio,mean_cardinality,max_cardinality,class_imbalance_ratio,missing_rate,duplicate_rate,train_test_duplicate_rate,feature_shift_proxy
+diabetes,768,8,2,1.0,0.0,0.0,0.0,1.8656716417910448,0.0,0.0,0.0,0.5082105975960725
+car,1728,6,4,0.0,1.0,3.5,4.0,18.615384615384617,0.0,0.0,0.0,0.49276859010217205
+vowel,990,12,11,0.8333333333333334,0.16666666666666666,8.5,15.0,1.0,0.0,0.0,0.0,0.4566735172795779

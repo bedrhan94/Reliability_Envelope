@@ -1,0 +1,38 @@
+# External-validation SMOKE config (2 axes only). Run via:
+#   python experiments/run_external_shift.py --config configs/experiments/shift_stress_external_2axis_smoke.yaml
+# Purpose: confirm the OpenML loader + shift generators + metric plumbing work on
+# external datasets (numeric / categorical / mixed) before the full 44-dataset run.
+# Writes to results/external/smoke/ (canonical results untouched).
+seed: 42
+output_dir: results/external/smoke
+
+# 3 diverse small datasets: numeric-binary / all-categorical / mixed-multiclass.
+datasets:
+  - diabetes       # 768x8,  numeric, 2 classes
+  - car            # 1728x6, all-categorical, 4 classes
+  - vowel          # 990x12, mixed, 11 classes
+
+# ICL = tabicl (local, no token). tabpfn_client needs the cloud token; excluded from smoke.
+models:
+  - logreg
+  - hist_gbdt
+  - tabicl
+
+# Only the two mechanisms under test.
+shift_axes:
+  - label_noise
+  - covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost
+  - catboost
+max_context_rows: 1000

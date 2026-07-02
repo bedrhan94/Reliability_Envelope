@@ -26,6 +26,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+from sklearn.impute import SimpleImputer
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import StandardScaler
 
@@ -55,12 +56,19 @@ def nearest_train_distance(split: Split) -> np.ndarray:
     num = list(split.numeric_columns)
     if not num or len(split.X_test) == 0 or len(split.X_train) == 0:
         return np.empty(0, dtype=float)
-    scaler = StandardScaler().fit(split.X_train[num])
-    x_tr = scaler.transform(split.X_train[num])
-    x_te = scaler.transform(split.X_test[num])
+    # Median-impute (train stats) so datasets with missing values still get a
+    # proximity proxy, consistent with the pipeline's numeric imputer.
+    imputer = SimpleImputer(strategy="median").fit(split.X_train[num])
+    x_tr = imputer.transform(split.X_train[num])
+    x_te = imputer.transform(split.X_test[num])
+    if x_tr.shape[1] == 0:  # every numeric column was all-NaN
+        return np.empty(0, dtype=float)
+    scaler = StandardScaler().fit(x_tr)
+    x_tr = scaler.transform(x_tr)
+    x_te = scaler.transform(x_te)
     nn = NearestNeighbors(n_neighbors=1).fit(x_tr)
     dist, _ = nn.kneighbors(x_te)
-    return dist.ravel() / np.sqrt(len(num))
+    return dist.ravel() / np.sqrt(x_tr.shape[1])
 
 
 def exact_duplicate_rate(split: Split) -> float:

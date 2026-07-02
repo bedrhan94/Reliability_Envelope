@@ -139,6 +139,13 @@ _REGISTRY: dict[str, Callable[[], Dataset]] = {
 }
 
 
+def register_dataset(dataset_id: str, factory: Callable[[], Dataset]) -> None:
+    """Register a zero-arg dataset factory under ``dataset_id`` (used by the
+    external OpenML loader; the built-in toy sets are registered statically).
+    Overwrites an existing entry with the same id."""
+    _REGISTRY[dataset_id] = factory
+
+
 def available_datasets() -> tuple[str, ...]:
     return tuple(_REGISTRY)
 
