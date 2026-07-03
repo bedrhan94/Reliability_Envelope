@@ -148,6 +148,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--tables", type=Path, default=_ROOT / "results" / "external" / "tables_2axis_seed42")
     p.add_argument("--profiles", type=Path, default=_ROOT / "results" / "external" / "dataset_profiles_external.csv")
     p.add_argument("--out", type=Path, default=_ROOT / "results" / "external" / "figures")
+    p.add_argument("--suffix", type=str, default="", help="appended before .png, e.g. _partial")
     args = p.parse_args(argv)
 
     tables = Path(args.tables)
@@ -165,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
         ("dataset_profile_vs_failure.png", lambda o: plot_profile_vs_failure(env, profiles, o) if env is not None else False),
     ]
     for fname, fn in jobs:
+        fname = fname.replace(".png", f"{args.suffix}.png")
         try:
             drew = fn(out / fname)
         except Exception as exc:  # noqa: BLE001
