@@ -17,3 +17,7 @@ results/tables_backup_*/
 
 # Logs / scratch
 *.log
+
+# Scratch dir created by a shell that failed to expand %TEMP% / $env:TEMP
+# (the multiseed smoke run landed here instead of the system temp dir).
+SERSBEDRHA~1APPDATAocaltemp/

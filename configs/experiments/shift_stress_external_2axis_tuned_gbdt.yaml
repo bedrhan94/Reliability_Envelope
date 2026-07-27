@@ -1,0 +1,47 @@
+# Tuned-GBDT baseline ablation (Sprint 7).
+# Runs ONLY the two tuned GBDT baselines on the stratified 12-dataset subset at
+# seed 42; their per-condition metrics are then merged into the existing 6-model
+# seed-42 rows by `experiments/merge_tuned_gbdt.py`, which recomputes the GBDT
+# reference from the TUNED clean utilities and re-evaluates every model's failure
+# flags against that stronger bar. No ICL/cloud call is needed here (CPU only).
+#
+# Run: python experiments/run_external_shift.py \
+#        --config configs/experiments/shift_stress_external_2axis_tuned_gbdt.yaml
+seed: 42
+output_dir: results/external/tables_2axis_tuned_gbdt_only
+
+datasets:
+  - car
+  - splice
+  - kr-vs-kp
+  - credit-approval
+  - eucalyptus
+  - credit-g
+  - churn
+  - wdbc
+  - vehicle
+  - pc1
+  - steel-plates-fault
+  - optdigits
+
+models:
+  - xgboost_tuned
+  - catboost_tuned
+
+shift_axes:
+  - label_noise
+  - covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost_tuned
+  - catboost_tuned
+max_context_rows: 1000

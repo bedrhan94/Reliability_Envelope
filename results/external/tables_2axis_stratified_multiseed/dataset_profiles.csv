@@ -1,0 +1,13 @@
+dataset_id,source,openml_id,n_samples,n_features,n_numeric,n_categorical,n_classes,class_imbalance_ratio,missing_rate,duplicate_ratio,near_duplicate_proxy,imbalance_flag,split_seed,usable_status,skip_reason
+kr-vs-kp,openml,3,3196,36,0,36,2,1.0929927963326784,0.0,0.0,,False,42,usable,
+credit-approval,openml,29,690,15,6,9,2,1.247557003257329,0.0064734299516908,0.0,0.8599033816425121,False,42,usable,
+credit-g,openml,31,1000,20,7,13,2,2.333333333333333,0.0,0.0,0.89,False,42,usable,
+vehicle,openml,54,846,18,18,0,4,1.0954773869346734,0.0,0.0,0.9803149606299212,False,42,usable,
+pc1,openml,1068,1109,21,21,0,2,13.402597402597404,0.0,0.145175834084761,0.945945945945946,True,42,usable,
+wdbc,openml,1510,569,30,30,0,2,1.6839622641509433,0.0,0.0,0.7192982456140351,False,42,usable,
+steel-plates-fault,openml,1504,1941,33,33,0,2,1.8841010401188707,0.0,0.0,0.9279588336192108,False,42,usable,
+churn,openml,40701,5000,20,16,4,2,6.072135785007072,0.0,0.0,0.3726666666666666,False,42,usable,
+optdigits,openml,28,5620,64,64,0,10,1.032490974729242,0.0,0.0,0.7876631079478055,False,42,usable,
+car,openml,40975,1728,6,0,6,4,18.615384615384617,0.0,0.0,,True,42,usable,
+splice,openml,46,3190,60,0,60,3,2.1577574967405475,0.0,0.0579937304075235,,False,42,usable,
+eucalyptus,openml,188,736,19,14,5,5,2.038095238095238,0.0320366132723112,0.0,0.7737556561085973,False,42,usable,

@@ -70,6 +70,44 @@ def _build_catboost(seed: int):
     )
 
 
+def _tuned(estimator, grid: dict, seed: int):
+    """Wrap an estimator in a small log-loss-scored CV search.
+
+    Used by the ``*_tuned`` baselines: the published GBDT baselines run at fixed
+    hyper-parameters, which a reviewer will read as an unfairly weak comparison
+    against tuning-free ICL models. Scoring on ``neg_log_loss`` (not accuracy)
+    tunes for exactly the calibration term the reliability utility penalises, so
+    these are the *strongest* honest GBDT baselines. ``GridSearchCV`` is
+    sklearn-compatible (``predict_proba`` / ``classes_`` delegate to the refit
+    best estimator), so the pipeline needs no change.
+    """
+    from sklearn.model_selection import GridSearchCV, StratifiedKFold
+
+    cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=seed)
+    return GridSearchCV(
+        estimator, grid, scoring="neg_log_loss", cv=cv, refit=True, n_jobs=1,
+        error_score="raise",
+    )
+
+
+def _build_xgboost_tuned(seed: int):
+    from xgboost import XGBClassifier
+
+    base = XGBClassifier(
+        tree_method="hist", eval_metric="logloss", random_state=seed, n_jobs=1
+    )
+    grid = {"n_estimators": [200, 600], "max_depth": [3, 6], "learning_rate": [0.05, 0.2]}
+    return _tuned(base, grid, seed)
+
+
+def _build_catboost_tuned(seed: int):
+    from catboost import CatBoostClassifier
+
+    base = CatBoostClassifier(random_seed=seed, verbose=False, allow_writing_files=False)
+    grid = {"iterations": [200, 600], "depth": [4, 6], "learning_rate": [0.03, 0.1]}
+    return _tuned(base, grid, seed)
+
+
 def _torch_device() -> str:
     try:
         import torch
@@ -148,6 +186,12 @@ _REGISTRY: dict[str, ModelSpec] = {
     "xgboost": ModelSpec("xgboost", "gbdt", _build_xgboost, required_package="xgboost"),
     "catboost": ModelSpec(
         "catboost", "gbdt", _build_catboost, required_package="catboost"
+    ),
+    "xgboost_tuned": ModelSpec(
+        "xgboost_tuned", "gbdt", _build_xgboost_tuned, required_package="xgboost"
+    ),
+    "catboost_tuned": ModelSpec(
+        "catboost_tuned", "gbdt", _build_catboost_tuned, required_package="catboost"
     ),
     "tabpfn": ModelSpec(
         "tabpfn", "icl", _build_tabpfn, required_package="tabpfn", is_context_bound=True

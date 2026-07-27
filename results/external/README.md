@@ -1,8 +1,27 @@
-# External validation (Sprint 2)
+# External validation
 
 Broad-benchmark check of the two mechanisms found in the 5-dataset pilot, on a
-curated set of public OpenML classification datasets. **This is infrastructure +
-smoke + full config — the full 44-dataset run is not executed here** (command below).
+curated set of public OpenML classification datasets. The full 44-dataset run **has
+since been executed and merged** (Sprint 2 set up the infrastructure; the run and
+merge landed in Sprints 3–4).
+
+## Which directory is which
+
+| Directory | Contents | Status |
+|---|---|---|
+| `tables_2axis_seed42_merged/` | **44 datasets × 6 models × seed 42 = 3168 rows.** The 5 token-less models plus the merged `tabpfn_client` cloud rows. | **Primary external result — cited by the paper.** |
+| `tables_2axis_seed42_partial/` | The same run before the TabPFN merge (5 models). | Superseded; kept as the merge audit trail. |
+| `tables_2axis_seed42_tabpfn_only/` | `tabpfn_client` alone; merged by `merge_tabpfn_client.py`. | Merge input only. |
+| `tables_2axis_stratified_multiseed/` | **12 stratified datasets × 6 models × 3 seeds = 2592 rows.** | Supplementary seed-stability evidence. |
+| `tables_2axis_tuned_gbdt_only/` | `xgboost_tuned` / `catboost_tuned`, 12-dataset subset, seed 42. | Merge input only. |
+| `tables_2axis_tuned_gbdt_merged/` | The subset re-scored against **tuned** GBDT baselines (`merge_tuned_gbdt.py`). | Baseline-strength ablation. |
+| `smoke/` | Tiny end-to-end check. | Not a result. |
+| `figures_merged/`, `figures_partial/`, `figures_stratified_multiseed/` | Figures for the like-named table dirs. | — |
+| `stratified_subset_12.csv` | The 12-dataset subset and its selection rationale. | See limitations. |
+| `dataset_profiles_external.csv` | Meta-features for every candidate dataset. | Joined by the figure scripts. |
+
+Re-analyses that re-run no models live in `results/ablations/` (reference-confound
+ablation and the τ / λ=0 sweep). See `paper/limitations.md` for what they change.
 
 ## Purpose
 Test whether the pilot's two headline mechanisms hold beyond the 5 toy datasets:
@@ -52,10 +71,10 @@ external data. Sanity: on `diabetes` label_noise, hist_gbdt degrades fastest
 (AUC 0.80→0.57) while logreg/tabicl stay higher — the pilot pattern reproduces even
 in smoke. All four external figures render from the smoke outputs.
 
-## Full run (command — not executed in this sprint)
-44 datasets × 2 axes × 6 λ × **6 models** × 1 seed (seed 42). `tabpfn_client` needs
-the PriorLabs cloud token; without it that model is cleanly `skipped` and the other
-five still run.
+## Full run (executed — commands for reproduction)
+44 datasets × 2 axes × 6 λ × **6 models** × 1 seed (seed 42) = 3168 rows, 0 skipped,
+0 error → `tables_2axis_seed42_merged/`. `tabpfn_client` needs the PriorLabs cloud
+token; without it that model is cleanly `skipped` and the other five still run.
 
 ```bash
 # with the cloud TabPFN (full 6-model comparison):
@@ -75,9 +94,26 @@ Outputs → `results/external/tables_2axis_seed42/` and `results/external/figure
 ## Known limitations
 - **covariate_shift is a no-op on all-categorical datasets** (no numeric columns to
   mean-shift), e.g. `car`, `tic-tac-toe`, `kr-vs-kp` — their covariate envelope is
-  trivially maximal. Interpret covariate results on numeric/mixed datasets only.
+  trivially maximal. Interpret covariate results on numeric/mixed datasets only:
+  38 of 44 in the primary run, 9 of 12 in the stratified subset.
 - **1 seed** for the full external run (the pilot's multi-seed CIs are not repeated
-  here); treat external AURE as a directional check, not a CI-backed ranking.
+  here); treat external AURE as a directional check, not a CI-backed ranking. The
+  12-dataset multiseed run is a partial answer — see the next point.
+- **The 12-dataset subset is outcome-selected.** It was stratified on meta-features
+  *and* balanced on the seed-42 outcome (`seed42_winner` / `seed42_margin` in
+  `stratified_subset_12.csv`), and it is easier than the full benchmark (AURE ≈0.11
+  vs ≈0.08). It answers "is the seed-42 ranking stable under reseeding", not "what is
+  the multiseed external AURE" — never quote its AURE as the latter.
+- **Two profile schemas are in play.** `dataset_profiles_external.csv` and the
+  multiseed dir's copy carry `n_numeric` / `n_categorical`; the merged dir's
+  `dataset_profiles.csv` comes from the pilot profiler and carries
+  `numeric_feature_ratio` / `categorical_feature_ratio`. Each figure script must use
+  the schema of the directory it reads (`make_stratified_figures.py` filters on
+  `n_numeric > 0`, `make_external_figures.py` on the ratio column).
+- **The failure rule can decide a cell at λ=0.** With the published thresholds,
+  xgboost / hist_gbdt / logreg fail before any shift on 33–44% of cells, which forces
+  ρ=0 there. This is a property of the metric, not of these runs — quantified in
+  `results/ablations/`.
 - **ICL in the smoke = `tabicl` only**; the full config adds `tabpfn_client` (needs token).
 - `near_duplicate_proxy` is numeric-only (NaN for all-categorical datasets) and is a
   proxy, not a contamination detector.

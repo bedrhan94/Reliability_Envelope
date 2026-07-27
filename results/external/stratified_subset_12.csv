@@ -1,0 +1,13 @@
+dataset_id,reason_for_selection,n_samples,n_features,n_numeric,n_categorical,n_classes,missing_rate,imbalance_flag,seed42_winner,seed42_margin
+car,"categorical, 4-class, imbalance-flagged, easy, seed42 tie",1728,6,0,6,4,0.0,True,tie,0.0
+splice,"categorical, 3-class, easy, GBDT-win example",3190,60,0,60,3,0.0,False,gbdt,-0.025
+kr-vs-kp,"categorical, binary, mid-size, seed42 tie",3196,36,0,36,2,0.0,False,tie,0.0
+credit-approval,"mixed, binary, missing values, ICL-win example",690,15,6,9,2,0.0065,False,icl,0.05
+eucalyptus,"mixed, 5-class multiclass, missing values, ICL-win",736,19,14,5,5,0.032,False,icl,0.025
+credit-g,"mixed, binary, hard clean-AUC, seed42 tie",1000,20,7,13,2,0.0,False,tie,0.0
+churn,"mixed, binary, large, hard, GBDT-win example",5000,20,16,4,2,0.0,False,gbdt,-0.05
+wdbc,"numeric, binary, small, easy, ICL-win",569,30,30,0,2,0.0,False,icl,0.025
+vehicle,"numeric, 4-class, medium difficulty, ICL-win",846,18,18,0,4,0.0,False,icl,0.05
+pc1,"numeric, binary, imbalance-flagged, hard, ICL-win",1109,21,21,0,2,0.0,True,icl,0.025
+steel-plates-fault,"numeric, binary, easy, strong GBDT-win",1941,33,33,0,2,0.0,False,gbdt,-0.2
+optdigits,"numeric, 10-class multiclass, large, easy, GBDT-win",5620,64,64,0,10,0.0,False,gbdt,-0.1

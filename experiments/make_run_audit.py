@@ -32,7 +32,10 @@ def build_audit(shift_results: pd.DataFrame) -> pd.DataFrame:
     n_md = df["model"].nunique()
     n_ax = df["shift_axis"].nunique()
     n_lm = df["shift_lambda"].nunique()
-    expected = n_ds * n_md * n_ax * n_lm
+    # `base_seed` is the run seed added by the multiseed runner; the pipeline's own
+    # `seed` column is a per-condition derived hash, so never use it for the count.
+    n_seeds = df["base_seed"].nunique() if "base_seed" in df.columns else 1
+    expected = n_ds * n_md * n_ax * n_lm * n_seeds
 
     ok_by_ds = df.groupby("dataset_id")["status"].apply(lambda s: (s == "ok").all())
     n_ds_ok = int(ok_by_ds.sum())
