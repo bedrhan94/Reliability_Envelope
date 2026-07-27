@@ -1,0 +1,51 @@
+# Post-hoc calibration ablation (Sprint 7).
+# The reference-confound result says the ICL envelope advantage tracks their *clean*
+# calibration. The obvious rebuttal is "then just calibrate the baselines". This runs
+# Platt-scaled (sigmoid, 3-fold in-train CV) versions of all four non-ICL models on the
+# 12-dataset subset at seed 42; `merge_tuned_gbdt.py --label calibrated` then splices
+# them against the UNCALIBRATED ICL rows and recomputes the reference and every failure
+# flag. Leaving the ICL models unhelped is deliberate: it is the setting most favourable
+# to the baselines. CPU only -- no cloud call.
+#
+# Run: python experiments/run_external_shift.py \
+#        --config configs/experiments/shift_stress_external_2axis_calibrated.yaml
+seed: 42
+output_dir: results/external/tables_2axis_calibrated_only
+
+datasets:
+  - car
+  - splice
+  - kr-vs-kp
+  - credit-approval
+  - eucalyptus
+  - credit-g
+  - churn
+  - wdbc
+  - vehicle
+  - pc1
+  - steel-plates-fault
+  - optdigits
+
+models:
+  - logreg_cal
+  - hist_gbdt_cal
+  - xgboost_cal
+  - catboost_cal
+
+shift_axes:
+  - label_noise
+  - covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost_cal
+  - catboost_cal
+max_context_rows: 1000

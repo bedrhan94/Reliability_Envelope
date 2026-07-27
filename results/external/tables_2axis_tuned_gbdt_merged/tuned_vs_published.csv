@@ -1,4 +1,4 @@
-model,aure_untuned_baselines,aure_tuned_baselines,lambda0_fail_untuned,lambda0_fail_tuned
+model,aure_published_baselines,aure_tuned_baselines,lambda0_fail_published,lambda0_fail_tuned
 tabpfn_client,0.11458333333333333,0.1125,0.0,0.0
 tabicl,0.12083333333333333,0.1125,0.0,0.0
 xgboost_tuned,,0.11041666666666668,,0.08333333333333333

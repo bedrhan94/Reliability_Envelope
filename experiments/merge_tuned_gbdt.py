@@ -1,10 +1,17 @@
-"""Merge the tuned-GBDT run into the 6-model seed-42 table and re-score everything.
+"""Merge a strengthened-baseline run into the 6-model seed-42 table and re-score.
 
-Referee objection: the published GBDT baselines run at fixed hyper-parameters
-while TabPFN/TabICL are tuning-free, so the comparison is unfairly weak. This
-answers it without re-running the ICL models -- their per-condition *metrics* do
-not depend on the reference, only the ``failed`` flag does, and that is recomputed
-here.
+Serves the two rebuttals to the reference-confound finding, which differ only in
+which models replace the published baselines:
+
+* **tuned** -- "your GBDT baselines run at fixed hyper-parameters while TabPFN and
+  TabICL are tuning-free, so the comparison is unfairly weak."
+* **calibrated** -- "you showed the ICL edge is out-of-the-box calibration; just
+  calibrate the baselines and it should vanish."
+
+Either way the ICL models are *not* re-run: their per-condition metrics do not
+depend on the reference, only the ``failed`` flag does, and that is recomputed
+here. Leaving the ICL models unhelped is deliberate -- it is the setting most
+favourable to the baselines, so a gap that survives it is the strong result.
 
 The merge does two things the ``merge_tabpfn_client`` merge does not:
 
@@ -20,10 +27,19 @@ failures). Both narrow the ICL margin.
 
 Usage::
 
+    # tuned-baseline arm (defaults)
     python experiments/merge_tuned_gbdt.py \
         --base results/external/tables_2axis_stratified_multiseed/shift_results.csv \
         --tuned results/external/tables_2axis_tuned_gbdt_only/shift_results.csv \
         --out results/external/tables_2axis_tuned_gbdt_merged
+
+    # calibrated-baseline arm
+    python experiments/merge_tuned_gbdt.py \
+        --base results/external/tables_2axis_stratified_multiseed/shift_results.csv \
+        --tuned results/external/tables_2axis_calibrated_only/shift_results.csv \
+        --out results/external/tables_2axis_calibrated_merged \
+        --replace xgboost,catboost,hist_gbdt,logreg \
+        --reference xgboost_cal,catboost_cal --label calibrated
 """
 
 from __future__ import annotations
@@ -50,6 +66,10 @@ from tice.metrics.utility import evaluate_failure  # noqa: E402
 REPLACED = ("xgboost", "catboost")
 TUNED = ("xgboost_tuned", "catboost_tuned")
 ICL = ("tabicl", "tabpfn_client")
+
+
+def _csv_list(raw: str) -> tuple[str, ...]:
+    return tuple(s for s in (p.strip() for p in raw.split(",")) if s)
 
 
 def rescore(df: pd.DataFrame, reference_models: tuple[str, ...],
@@ -94,7 +114,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--tuned", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--seed", type=int, default=42, help="base_seed slice to merge against")
+    p.add_argument("--replace", type=_csv_list, default=REPLACED,
+                   help="baseline models the new arm supersedes (dropped from the merge)")
+    p.add_argument("--reference", type=_csv_list, default=TUNED,
+                   help="models the recomputed GBDT reference is chosen from")
+    p.add_argument("--label", default="tuned", help="column suffix in the comparison table")
     args = p.parse_args(argv)
+    replaced, reference = tuple(args.replace), tuple(args.reference)
 
     base = pd.read_csv(args.base)
     if "base_seed" in base.columns:
@@ -104,11 +130,11 @@ def main(argv: list[str] | None = None) -> int:
 
     datasets = sorted(set(tuned.dataset_id))
     base = base[base.dataset_id.isin(datasets)]
-    kept = base[~base.model.isin(REPLACED)]
+    kept = base[~base.model.isin(replaced)]
     cols = [c for c in kept.columns if c in tuned.columns]
     merged = pd.concat([kept[cols], tuned[cols]], ignore_index=True)
 
-    untuned_ref = rescore(base, REPLACED, th)
+    untuned_ref = rescore(base, replaced, th)
     # Guard: our reference pick is argmax over the dataset's lambda=0 rows, while the
     # pipeline stores the first such row per (dataset, model). Those agree only while
     # the axes' lambda=0 rows are identical (they are -- the shift is a no-op there).
@@ -121,36 +147,37 @@ def main(argv: list[str] | None = None) -> int:
             "the untuned rows -- the reference-selection semantics have diverged from "
             "the pipeline; fix before trusting the tuned-vs-untuned comparison."
         )
-    tuned_ref = rescore(merged, TUNED, th)
+    tuned_ref = rescore(merged, reference, th)
 
     a_untuned, a_tuned = _aure(untuned_ref), _aure(tuned_ref)
-    m_untuned = _margin(a_untuned, REPLACED)
-    m_tuned = _margin(a_tuned, TUNED)
+    m_untuned = _margin(a_untuned, replaced)
+    m_tuned = _margin(a_tuned, reference)
 
     zero_un = untuned_ref[untuned_ref.shift_lambda == 0.0].groupby("model").failed.mean()
     zero_tu = tuned_ref[tuned_ref.shift_lambda == 0.0].groupby("model").failed.mean()
 
+    lbl = args.label
     comparison = pd.DataFrame(
         {
-            "aure_untuned_baselines": a_untuned,
-            "aure_tuned_baselines": a_tuned,
-            "lambda0_fail_untuned": zero_un,
-            "lambda0_fail_tuned": zero_tu,
+            "aure_published_baselines": a_untuned,
+            f"aure_{lbl}_baselines": a_tuned,
+            "lambda0_fail_published": zero_un,
+            f"lambda0_fail_{lbl}": zero_tu,
         }
-    ).sort_values("aure_tuned_baselines", ascending=False)
+    ).sort_values(f"aure_{lbl}_baselines", ascending=False)
 
     args.out.mkdir(parents=True, exist_ok=True)
     tuned_ref.to_csv(args.out / "shift_results.csv", index=False)
     envelopes = compute_envelopes(tuned_ref)
     envelopes.to_csv(args.out / "reliability_envelopes.csv", index=False)
     compute_aure(envelopes).to_csv(args.out / "aure_summary.csv", index=False)
-    comparison.to_csv(args.out / "tuned_vs_untuned.csv")
+    comparison.to_csv(args.out / f"{lbl}_vs_published.csv")
 
-    print(f"datasets={len(datasets)} rows={len(tuned_ref)} seed={args.seed}")
+    print(f"datasets={len(datasets)} rows={len(tuned_ref)} seed={args.seed} arm={lbl}")
     print(comparison.round(4).to_string())
-    print(f"\nreference model per dataset (tuned): "
+    print(f"\nreference model per dataset ({lbl}): "
           f"{tuned_ref.best_gbdt.value_counts().to_dict()}")
-    print(f"min-ICL - best-GBDT margin: untuned {m_untuned:+.4f} -> tuned {m_tuned:+.4f} "
+    print(f"min-ICL - best-GBDT margin: published {m_untuned:+.4f} -> {lbl} {m_tuned:+.4f} "
           f"(change {m_tuned - m_untuned:+.4f})")
     print(f"wrote 4 tables to {args.out}")
     return 0

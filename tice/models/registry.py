@@ -108,6 +108,43 @@ def _build_catboost_tuned(seed: int):
     return _tuned(base, grid, seed)
 
 
+def _calibrated(estimator, seed: int):
+    """Wrap an estimator in post-hoc Platt scaling fitted inside the training split.
+
+    Used by the ``*_cal`` baselines. The reference-confound ablation shows the ICL
+    models' envelope advantage tracks their *clean* calibration, which invites the
+    obvious rebuttal: just calibrate the baselines. These answer it directly.
+
+    ``CalibratedClassifierCV`` fits the calibrator on held-out folds of the training
+    data, so no test information leaks -- important here, because the shift axes
+    perturb train (label_noise) and test (covariate_shift) differently and a
+    test-fitted calibrator would silently undo the covariate shift. Sigmoid rather
+    than isotonic: several of these datasets are multiclass with few hundred rows per
+    fold, where isotonic overfits.
+    """
+    from sklearn.calibration import CalibratedClassifierCV
+    from sklearn.model_selection import StratifiedKFold
+
+    cv = StratifiedKFold(n_splits=3, shuffle=True, random_state=seed)
+    return CalibratedClassifierCV(estimator, method="sigmoid", cv=cv)
+
+
+def _build_logreg_cal(seed: int):
+    return _calibrated(_build_logreg(seed), seed)
+
+
+def _build_hist_gbdt_cal(seed: int):
+    return _calibrated(_build_hist_gbdt(seed), seed)
+
+
+def _build_xgboost_cal(seed: int):
+    return _calibrated(_build_xgboost(seed), seed)
+
+
+def _build_catboost_cal(seed: int):
+    return _calibrated(_build_catboost(seed), seed)
+
+
 def _torch_device() -> str:
     try:
         import torch
@@ -192,6 +229,14 @@ _REGISTRY: dict[str, ModelSpec] = {
     ),
     "catboost_tuned": ModelSpec(
         "catboost_tuned", "gbdt", _build_catboost_tuned, required_package="catboost"
+    ),
+    "logreg_cal": ModelSpec("logreg_cal", "linear", _build_logreg_cal),
+    "hist_gbdt_cal": ModelSpec("hist_gbdt_cal", "gbdt", _build_hist_gbdt_cal),
+    "xgboost_cal": ModelSpec(
+        "xgboost_cal", "gbdt", _build_xgboost_cal, required_package="xgboost"
+    ),
+    "catboost_cal": ModelSpec(
+        "catboost_cal", "gbdt", _build_catboost_cal, required_package="catboost"
     ),
     "tabpfn": ModelSpec(
         "tabpfn", "icl", _build_tabpfn, required_package="tabpfn", is_context_bound=True
