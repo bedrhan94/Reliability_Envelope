@@ -15,6 +15,8 @@ merge landed in Sprints 3–4).
 | `tables_2axis_stratified_multiseed/` | **12 stratified datasets × 6 models × 3 seeds = 2592 rows.** | Supplementary seed-stability evidence. |
 | `tables_2axis_tuned_gbdt_only/` | `xgboost_tuned` / `catboost_tuned`, 12-dataset subset, seed 42. | Merge input only. |
 | `tables_2axis_tuned_gbdt_merged/` | The subset re-scored against **tuned** GBDT baselines (`merge_tuned_gbdt.py`). | Baseline-strength ablation. |
+| `tables_2axis_calibrated_only/` | Platt-scaled `logreg`/`hist_gbdt`/`xgboost`/`catboost`, 12-dataset subset, seed 42. | Merge input only. |
+| `tables_2axis_calibrated_merged/` | The subset re-scored against **calibrated** baselines (`merge_tuned_gbdt.py --label calibrated`). | Post-hoc calibration ablation. |
 | `smoke/` | Tiny end-to-end check. | Not a result. |
 | `figures_merged/`, `figures_partial/`, `figures_stratified_multiseed/` | Figures for the like-named table dirs. | — |
 | `stratified_subset_12.csv` | The 12-dataset subset and its selection rationale. | See limitations. |

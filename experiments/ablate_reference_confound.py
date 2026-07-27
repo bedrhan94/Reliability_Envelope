@@ -149,7 +149,11 @@ def run(results_csv: Path, out_dir: Path) -> pd.DataFrame:
 
 def _print_margins(s: pd.DataFrame) -> None:
     icl = ["tabicl", "tabpfn_client"]
-    gbdt = ["catboost", "xgboost", "hist_gbdt", "catboost_tuned", "xgboost_tuned"]
+    gbdt = [
+        "catboost", "xgboost", "hist_gbdt",
+        "catboost_tuned", "xgboost_tuned",
+        "catboost_cal", "xgboost_cal", "hist_gbdt_cal",
+    ]
     idx = s.set_index("model")
     for variant in ("aure_grid", "aure_common", "aure_self"):
         if variant not in idx or idx[variant].isna().all():

@@ -102,9 +102,17 @@ def _aure(df: pd.DataFrame) -> pd.Series:
     return compute_aure(compute_envelopes(df)).set_index("model").aure
 
 
-def _margin(aure: pd.Series, gbdt: tuple[str, ...]) -> float:
+def _margin(aure: pd.Series, df: pd.DataFrame) -> float:
+    """min-ICL minus best-GBDT, with "best GBDT" taken over the whole gbdt *family*.
+
+    Deriving the family from the results table rather than a hard-coded list keeps
+    the comparison honest when an arm swaps models in or out: the reference pool is
+    a config choice, but the strongest GBDT a reader would compare against is every
+    gbdt-family model in the run.
+    """
+    fam = df.drop_duplicates("model").set_index("model")["family"]
     icl = [m for m in ICL if m in aure.index]
-    gb = [m for m in gbdt if m in aure.index]
+    gb = [m for m in aure.index if fam.get(m) == "gbdt"]
     return float(aure[icl].min() - aure[gb].max())
 
 
@@ -117,10 +125,18 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--replace", type=_csv_list, default=REPLACED,
                    help="baseline models the new arm supersedes (dropped from the merge)")
     p.add_argument("--reference", type=_csv_list, default=TUNED,
-                   help="models the recomputed GBDT reference is chosen from")
+                   help="models the recomputed GBDT reference is chosen from (new arm)")
+    # Distinct from --replace: the published arm's reference pool is whatever the original
+    # run configured (gbdt_reference_models), NOT everything the new arm supersedes. The
+    # calibrated arm replaces four models but the published reference is still the
+    # xgboost/catboost pair; conflating the two changes the baseline we are comparing
+    # against and trips the reproduction guard below.
+    p.add_argument("--baseline-reference", type=_csv_list, default=REPLACED,
+                   help="models the ORIGINAL run chose its reference from")
     p.add_argument("--label", default="tuned", help="column suffix in the comparison table")
     args = p.parse_args(argv)
     replaced, reference = tuple(args.replace), tuple(args.reference)
+    baseline_reference = tuple(args.baseline_reference)
 
     base = pd.read_csv(args.base)
     if "base_seed" in base.columns:
@@ -134,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
     cols = [c for c in kept.columns if c in tuned.columns]
     merged = pd.concat([kept[cols], tuned[cols]], ignore_index=True)
 
-    untuned_ref = rescore(base, replaced, th)
+    untuned_ref = rescore(base, baseline_reference, th)
     # Guard: our reference pick is argmax over the dataset's lambda=0 rows, while the
     # pipeline stores the first such row per (dataset, model). Those agree only while
     # the axes' lambda=0 rows are identical (they are -- the shift is a no-op there).
@@ -150,8 +166,8 @@ def main(argv: list[str] | None = None) -> int:
     tuned_ref = rescore(merged, reference, th)
 
     a_untuned, a_tuned = _aure(untuned_ref), _aure(tuned_ref)
-    m_untuned = _margin(a_untuned, replaced)
-    m_tuned = _margin(a_tuned, reference)
+    m_untuned = _margin(a_untuned, untuned_ref)
+    m_tuned = _margin(a_tuned, tuned_ref)
 
     zero_un = untuned_ref[untuned_ref.shift_lambda == 0.0].groupby("model").failed.mean()
     zero_tu = tuned_ref[tuned_ref.shift_lambda == 0.0].groupby("model").failed.mean()
