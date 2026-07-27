@@ -83,8 +83,11 @@ def add_self_ref_failure(df: pd.DataFrame, cells: list[str]) -> pd.DataFrame:
     return out
 
 
-def run(results_csv: Path, out_dir: Path) -> pd.DataFrame:
+def run(results_csv: Path, out_dir: Path, seed: int | None = None) -> pd.DataFrame:
     df = pd.read_csv(results_csv)
+    if seed is not None and "base_seed" in df.columns:
+        df = df[df.base_seed == seed].reset_index(drop=True)
+        print(f"restricted to base_seed={seed}: {len(df)} rows")
     cells = _cell_keys(df)
     models = sorted(df.model.unique())
     n_models = len(models)
@@ -171,8 +174,10 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--results", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--seed", type=int, default=None,
+                   help="restrict a multiseed table to one base_seed (for arm comparisons)")
     args = p.parse_args(argv)
-    run(args.results, args.out)
+    run(args.results, args.out, args.seed)
     return 0
 
 
