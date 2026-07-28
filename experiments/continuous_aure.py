@@ -39,9 +39,20 @@ _TH = Thresholds()
 
 
 def continuous_envelopes(df: pd.DataFrame) -> pd.DataFrame:
-    """One continuous rho per (model, dataset, axis) with at least one ok row."""
+    """One continuous rho per (model, dataset, axis) -- per run seed when there are several.
+
+    Without ``base_seed`` in the grouping a multiseed table collapses every seed into
+    one envelope, so the lambda sequence contains each value once per seed and the
+    interpolated crossing is computed over duplicated points. Grouping on it matches
+    ``compute_envelopes``' behaviour and keeps the quantised and continuous columns
+    comparable.
+    """
+    keys = ["model", "dataset_id", "shift_axis"]
+    if "base_seed" in df.columns and df["base_seed"].nunique() > 1:
+        keys.append("base_seed")
     rows: list[dict] = []
-    for (model, ds, axis), g in df.groupby(["model", "dataset_id", "shift_axis"], sort=True):
+    for values, g in df.groupby(keys, sort=True):
+        model, ds, axis = values[0], values[1], values[2]
         ok = g[g["status"] == "ok"].sort_values("shift_lambda")
         if ok.empty:
             continue
@@ -71,7 +82,13 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     df = pd.read_csv(shift_path)
 
-    quant = compute_aure(compute_envelopes(df)).set_index("model")["aure"]
+    # Both sides must group on the run seed when the table has several, or each seed's
+    # lambda sweep is folded into one envelope and the two columns stop being comparable.
+    group_keys = ("model", "dataset_id", "shift_axis")
+    if "base_seed" in df.columns and df["base_seed"].nunique() > 1:
+        group_keys += ("base_seed",)
+    quant_env = compute_envelopes(df, group_keys=group_keys)
+    quant = compute_aure(quant_env).set_index("model")["aure"]
     cont_env = continuous_envelopes(df)
     cont = cont_env.groupby("model")["rho"].mean()
 
@@ -84,7 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     print(out.round(4).to_string())
 
     print("\n=== resolution (distinct rho values across all envelopes) ===")
-    grid_rho = compute_envelopes(df)["rho"]
+    grid_rho = quant_env["rho"]
     print(f"  quantised : {grid_rho.nunique()} distinct values {sorted(grid_rho.unique())}")
     print(f"  continuous: {cont_env['rho'].round(4).nunique()} distinct values")
 
