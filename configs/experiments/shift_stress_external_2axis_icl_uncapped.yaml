@@ -1,0 +1,69 @@
+# ICL context-cap ablation (Sprint 8).
+# Table 16 showed the aggregate external margin averages two opposite regimes, split
+# exactly on whether `max_context_rows=1000` binds: +0.0235 where it does not (17
+# datasets), -0.0102 where it does (27). That cap is a handicap we imposed on the ICL
+# models, and it is perfectly confounded with dataset size -- larger datasets favour
+# GBDTs for reasons unrelated to context length. The only way to separate them is to
+# re-run the ICL models UNCAPPED on the 27 large datasets and re-score.
+#
+# 10000 exceeds every training split here (max 7738), so the cap never binds: the ICL
+# models see exactly what the GBDTs see. GBDT rows are reused unchanged via
+# `merge_tuned_gbdt.py --replace tabicl,tabpfn_client` -- the GBDT reference does not
+# depend on the ICL models, so only the ICL failure flags are recomputed.
+#
+# tabpfn_client needs TABPFN_TOKEN; without it it is cleanly skipped and tabicl still runs.
+#
+# Run: TABPFN_TOKEN=<key> python experiments/run_external_shift.py #        --config configs/experiments/shift_stress_external_2axis_icl_uncapped.yaml
+seed: 42
+output_dir: results/external/tables_2axis_icl_uncapped_only
+
+datasets:
+  - GesturePhaseSegmentation
+  - PhishingWebsites
+  - car
+  - churn
+  - cmc
+  - dna
+  - first-order-theorem-proving
+  - kc1
+  - kr-vs-kp
+  - mfeat-factors
+  - mfeat-fourier
+  - mfeat-karhunen
+  - mfeat-morphological
+  - mfeat-zernike
+  - optdigits
+  - ozone-level-8hr
+  - pc3
+  - pc4
+  - pendigits
+  - phoneme
+  - satimage
+  - segment
+  - spambase
+  - splice
+  - steel-plates-fault
+  - texture
+  - wall-robot-navigation
+
+models:
+  - tabicl
+  - tabpfn_client
+
+shift_axes:
+  - label_noise
+  - covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost
+  - catboost
+max_context_rows: 10000
