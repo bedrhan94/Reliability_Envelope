@@ -17,6 +17,9 @@ merge landed in Sprints 3–4).
 | `tables_2axis_tuned_gbdt_merged/` | The subset re-scored against **tuned** GBDT baselines (`merge_tuned_gbdt.py`). | Baseline-strength ablation. |
 | `tables_2axis_calibrated_only/` | Platt-scaled `logreg`/`hist_gbdt`/`xgboost`/`catboost`, 12-dataset subset, seed 42. | Merge input only. |
 | `tables_2axis_calibrated_merged/` | The subset re-scored against **calibrated** baselines (`merge_tuned_gbdt.py --label calibrated`). | Post-hoc calibration ablation. |
+| `tables_2axis_icl_uncapped_only/` · `..._merged/` | ICL models re-run uncapped on the 27 large datasets; merged back over the 44-dataset table. | **Context-cap correction — the corrected external result.** |
+| `tables_2axis_stratified_multiseed_icl_uncapped/` · `..._merged/` | Same correction for the 12×3-seed subset. | Does not reproduce the correction — see Table 7. |
+| `tables_2axis_tuned_gbdt_merged_uncapped/` · `tables_2axis_calibrated_merged_uncapped/` | The tuned and calibrated arms re-merged onto the uncapped ICL base. | Consistency only; within-resolution. |
 | `smoke/` | Tiny end-to-end check. | Not a result. |
 | `figures_merged/`, `figures_partial/`, `figures_stratified_multiseed/` | Figures for the like-named table dirs. | — |
 | `stratified_subset_12.csv` | The 12-dataset subset and its selection rationale. | See limitations. |

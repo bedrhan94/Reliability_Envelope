@@ -1,0 +1,2 @@
+model_a,model_b,seed_mean_delta,seed_ci95_lo,seed_ci95_hi,seed_wilcoxon_p,n_seeds,dataset_mean_delta,dataset_ci95_lo,dataset_ci95_hi,n_datasets,seed_p_holm,significant
+tabicl,tabpfn_client,0.009027777777777773,0.002083333333333326,0.016666666666666663,0.25,3,0.009027777777777775,0.0013888888888888898,0.018749999999999992,12,0.25,False
