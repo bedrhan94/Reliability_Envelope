@@ -1,0 +1,49 @@
+# ICL context-cap correction for the seed-stability subset (Sprint 8).
+# The 44-dataset run was corrected by lifting max_context_rows (Table 16); this does the
+# same for the 12-dataset x 3-seed arm so Tables 7-8 sit on the same footing. ICL models
+# only: the GBDT rows are reused unchanged from the capped multiseed run at merge time,
+# since the GBDT reference does not depend on the ICL models.
+# 12 stratified OpenML datasets x 3 seeds x 2 axes x 6 lambda x 6 models = 2592 rows.
+# Addresses the "external single-seed" limitation WITHOUT a full 44-dataset multiseed run.
+# Run: TABPFN_TOKEN=<key> python experiments/run_external_multiseed.py \
+#        --config configs/experiments/shift_stress_external_2axis_stratified_multiseed.yaml
+# `seed` is the base; `seeds` is read by the multiseed runner (load_config ignores it).
+seed: 42
+seeds: [42, 1337, 2025]
+output_dir: results/external/tables_2axis_stratified_multiseed_icl_uncapped
+
+datasets:
+  - car
+  - splice
+  - kr-vs-kp
+  - credit-approval
+  - eucalyptus
+  - credit-g
+  - churn
+  - wdbc
+  - vehicle
+  - pc1
+  - steel-plates-fault
+  - optdigits
+
+models:
+  - tabicl
+  - tabpfn_client
+
+shift_axes:
+  - label_noise
+  - covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - tabicl
+  - tabpfn_client
+max_context_rows: 10000
