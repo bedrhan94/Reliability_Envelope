@@ -47,6 +47,7 @@ from run_multiseed import _aure_by_dataset, pairwise_tests, summarize_aure  # no
 
 import tice.datasets.external  # noqa: E402,F401  (registers external datasets)
 from tice.config import load_config  # noqa: E402
+from tice.envelope.reliability import compute_aure  # noqa: E402
 from tice.pipeline import run_pipeline  # noqa: E402
 
 
@@ -71,20 +72,36 @@ def main(argv: list[str] | None = None) -> int:
     print(f"[ext-ms] datasets={len(base.datasets)} models={list(base.models)} "
           f"axes={list(base.shift_axes)} seeds={seeds}")
 
+    # Per-seed checkpoints. A multi-hour run that only writes at the end loses
+    # everything to one transient cloud error -- which happened twice here. Each
+    # completed seed is persisted immediately, and an existing checkpoint is reused
+    # instead of recomputed, so a crashed run resumes where it stopped.
+    ckpt_dir = out_dir / "checkpoints"
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+
     sr_all, env_all, aure_seed = [], [], []
     with tempfile.TemporaryDirectory(prefix="tice_ext_ms_") as tmp:
         for seed in seeds:
-            cfg = replace(base, seed=seed, output_dir=Path(tmp) / f"seed_{seed}")
-            print(f"[ext-ms] seed={seed} ...", flush=True)
-            out = run_pipeline(cfg)
-            sr = out.shift_results.copy().rename(columns={"seed": "variant_seed"})
-            sr["base_seed"] = seed
+            sr_ck = ckpt_dir / f"seed_{seed}_shift_results.csv"
+            en_ck = ckpt_dir / f"seed_{seed}_envelopes.csv"
+            if sr_ck.exists() and en_ck.exists():
+                print(f"[ext-ms] seed={seed} resumed from checkpoint", flush=True)
+                sr, en = pd.read_csv(sr_ck), pd.read_csv(en_ck)
+            else:
+                cfg = replace(base, seed=seed, output_dir=Path(tmp) / f"seed_{seed}")
+                print(f"[ext-ms] seed={seed} ...", flush=True)
+                out = run_pipeline(cfg)
+                sr = out.shift_results.copy().rename(columns={"seed": "variant_seed"})
+                sr["base_seed"] = seed
+                en = out.reliability_envelopes.copy()
+                en["base_seed"] = seed
+                sr.to_csv(sr_ck, index=False)
+                en.to_csv(en_ck, index=False)
+                print(f"[ext-ms] seed={seed} checkpointed ({len(sr)} rows)", flush=True)
             sr_all.append(sr)
-            en = out.reliability_envelopes.copy()
-            en["base_seed"] = seed
             env_all.append(en)
-            a = out.aure_summary.copy()
-            a["seed"] = seed
+            a = (compute_aure(en.drop(columns=["base_seed"], errors="ignore"))
+                 .assign(seed=seed))
             aure_seed.append(a[["seed", "model", "aure"]])
 
     shift_results = pd.concat(sr_all, ignore_index=True)
