@@ -32,6 +32,11 @@ class RunResult:
     nll: float = float("nan")
     nll_norm: float = float("nan")
     ece: float = float("nan")
+    brier: float = float("nan")
+    ece_adaptive: float = float("nan")
+    ece_classwise: float = float("nan")
+    calib_slope: float = float("nan")
+    calib_intercept: float = float("nan")
     utility: float = float("nan")
     n_train: int = 0
     metric_notes: str = ""
@@ -51,6 +56,11 @@ class RunResult:
             "nll": self.nll,
             "nll_norm": self.nll_norm,
             "ece": self.ece,
+            "brier": self.brier,
+            "ece_adaptive": self.ece_adaptive,
+            "ece_classwise": self.ece_classwise,
+            "calib_slope": self.calib_slope,
+            "calib_intercept": self.calib_intercept,
             "utility": self.utility,
             "n_train": self.n_train,
             "metric_notes": self.metric_notes,
@@ -155,6 +165,11 @@ def run_model(
         nll=metrics.nll,
         nll_norm=metrics.nll_norm,
         ece=metrics.ece,
+        brier=metrics.brier,
+        ece_adaptive=metrics.ece_adaptive,
+        ece_classwise=metrics.ece_classwise,
+        calib_slope=metrics.calib_slope,
+        calib_intercept=metrics.calib_intercept,
         utility=utility,
         n_train=n_train,
         metric_notes=metrics.notes,
