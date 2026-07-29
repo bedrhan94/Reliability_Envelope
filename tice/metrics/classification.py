@@ -105,12 +105,22 @@ def adaptive_calibration_error(
     n = conf.size
     if n == 0:
         return float("nan")
-    order = np.argsort(conf)
+
+    # Bin on quantile edges rather than by slicing the sorted order into equal chunks.
+    # Chunking splits ties: with every confidence equal to 0.9 it manufactures 15 bins
+    # whose membership depends on the input order, and reports the between-bin spread
+    # in accuracy as calibration error (0.41 instead of the correct 0.30). Tied
+    # confidences are indistinguishable to a calibration measure and must share a bin,
+    # which matters on real data because models routinely saturate at 1.0.
+    edges = np.unique(np.quantile(conf, np.linspace(0.0, 1.0, n_bins + 1)))
+    if edges.size < 2:  # a single distinct confidence: one bin
+        return float(abs(correct.mean() - conf.mean()))
+    idx = np.clip(np.digitize(conf, edges[1:-1], right=False), 0, edges.size - 2)
     ace = 0.0
-    for chunk in np.array_split(order, min(n_bins, n)):
-        if chunk.size == 0:
-            continue
-        ace += (chunk.size / n) * abs(correct[chunk].mean() - conf[chunk].mean())
+    for b in range(edges.size - 1):
+        mask = idx == b
+        if mask.any():
+            ace += (mask.sum() / n) * abs(correct[mask].mean() - conf[mask].mean())
     return float(ace)
 
 
