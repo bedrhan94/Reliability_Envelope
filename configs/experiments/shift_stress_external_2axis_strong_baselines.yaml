@@ -1,0 +1,89 @@
+# Strong-baseline arm on the FULL benchmark (Reviewer 2, 4.4).
+# The objection: tuning moved xgboost's zero-shift failure rate from ~42% to ~8% on the
+# 12-dataset ablation, so baseline settings materially affect AURE -- yet the primary
+# 44-dataset comparison ran fixed defaults and had no ensemble arm at all.
+#
+# This gives CatBoost, XGBoost and LightGBM an EQUAL tuning budget (the same 8-point
+# log-loss-scored grid, 3-fold CV) on all 44 datasets, and adds the ensemble baseline that
+# Ovadia et al. identify as the most shift-robust family -- five CatBoost fits at different
+# seeds with probabilities averaged.
+#
+# ICL rows are not re-run: they are spliced in from the multiseed primary run by
+# merge_tuned_gbdt.py, since the GBDT reference does not depend on them.
+#
+# 44 datasets x 2 axes x 6 lambda x 5 models = 2640 conditions, seed 42. The three
+# tuned models cost 24 fits per condition and the ensemble 5, so this is the heaviest arm
+# in the paper; run it after the multiseed benchmark rather than alongside it.
+seed: 42
+output_dir: results/external/tables_2axis_strong_baselines
+
+datasets:
+  - kr-vs-kp
+  - breast-w
+  - mfeat-fourier
+  - mfeat-karhunen
+  - mfeat-morphological
+  - mfeat-zernike
+  - mfeat-factors
+  - cmc
+  - credit-approval
+  - credit-g
+  - diabetes
+  - tic-tac-toe
+  - vehicle
+  - spambase
+  - analcatdata_authorship
+  - pc4
+  - pc3
+  - kc1
+  - pc1
+  - ilpd
+  - qsar-biodeg
+  - wdbc
+  - ozone-level-8hr
+  - phoneme
+  - steel-plates-fault
+  - wall-robot-navigation
+  - cnae-9
+  - first-order-theorem-proving
+  - churn
+  - texture
+  - optdigits
+  - pendigits
+  - satimage
+  - segment
+  - vowel
+  - climate-model-simulation-crashes
+  - car
+  - dna
+  - splice
+  - eucalyptus
+  - PhishingWebsites
+  - GesturePhaseSegmentation
+  - MiceProtein
+  - dresses-sales
+
+models:
+  - lightgbm
+  - xgboost_tuned
+  - catboost_tuned
+  - lightgbm_tuned
+  - gbdt_ensemble
+
+shift_axes:
+  - label_noise
+  - covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost_tuned
+  - catboost_tuned
+max_context_rows: 10000

@@ -12,6 +12,8 @@ import importlib.util
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from sklearn.base import BaseEstimator, ClassifierMixin
+
 MODEL_FAMILIES = ("linear", "gbdt", "icl")
 
 
@@ -106,6 +108,73 @@ def _build_catboost_tuned(seed: int):
     base = CatBoostClassifier(random_seed=seed, verbose=False, allow_writing_files=False)
     grid = {"iterations": [200, 600], "depth": [4, 6], "learning_rate": [0.03, 0.1]}
     return _tuned(base, grid, seed)
+
+
+def _build_lightgbm(seed: int):
+    from lightgbm import LGBMClassifier
+
+    return LGBMClassifier(
+        n_estimators=200, max_depth=6, random_state=seed, n_jobs=1, verbose=-1
+    )
+
+
+def _build_lightgbm_tuned(seed: int):
+    from lightgbm import LGBMClassifier
+
+    base = LGBMClassifier(random_state=seed, n_jobs=1, verbose=-1)
+    grid = {"n_estimators": [200, 600], "max_depth": [3, 6], "learning_rate": [0.05, 0.2]}
+    return _tuned(base, grid, seed)
+
+
+class _SeedEnsemble(BaseEstimator, ClassifierMixin):
+    """Average the predicted probabilities of one estimator refit at several seeds.
+
+    The tabular analogue of the deep ensembles that Ovadia et al. (2019) found to be
+    the most shift-robust family they tested -- the one strong baseline our model set
+    was missing. Averaging probabilities (not votes) is what makes it a calibration
+    intervention rather than only an accuracy one.
+
+    Inherits ``BaseEstimator``/``ClassifierMixin`` rather than duck-typing the API:
+    recent scikit-learn resolves estimator tags through the MRO, and a plain class
+    fails the pipeline's preflight check with a ``__sklearn_tags__`` error. Parameters
+    are stored under their ``__init__`` names so ``get_params`` works.
+    """
+
+    def __init__(self, factory=None, seeds=()):
+        self.factory = factory
+        self.seeds = seeds
+
+    def fit(self, X, y):
+        import numpy as np
+
+        self.members_ = []
+        for s in self.seeds:
+            member = self.factory(s)
+            member.fit(X, y)
+            self.members_.append(member)
+        self.classes_ = np.asarray(self.members_[0].classes_)
+        return self
+
+    def predict_proba(self, X):
+        import numpy as np
+
+        # Members share the training labels, so their class order agrees; that is
+        # checked rather than assumed, because a silent column mismatch would average
+        # different classes together and quietly corrupt every calibration metric.
+        probas = []
+        for m in self.members_:
+            if not np.array_equal(np.asarray(m.classes_), self.classes_):
+                raise RuntimeError("ensemble members disagree on class order")
+            probas.append(np.asarray(m.predict_proba(X), dtype=float))
+        return np.mean(probas, axis=0)
+
+    def predict(self, X):
+        return self.classes_[self.predict_proba(X).argmax(axis=1)]
+
+
+def _build_gbdt_ensemble(seed: int):
+    """Five CatBoost fits at different seeds, probabilities averaged."""
+    return _SeedEnsemble(_build_catboost, [seed + i * 1000 for i in range(5)])
 
 
 def _calibrated(estimator, seed: int):
@@ -229,6 +298,15 @@ _REGISTRY: dict[str, ModelSpec] = {
     ),
     "catboost_tuned": ModelSpec(
         "catboost_tuned", "gbdt", _build_catboost_tuned, required_package="catboost"
+    ),
+    "lightgbm": ModelSpec(
+        "lightgbm", "gbdt", _build_lightgbm, required_package="lightgbm"
+    ),
+    "lightgbm_tuned": ModelSpec(
+        "lightgbm_tuned", "gbdt", _build_lightgbm_tuned, required_package="lightgbm"
+    ),
+    "gbdt_ensemble": ModelSpec(
+        "gbdt_ensemble", "gbdt", _build_gbdt_ensemble, required_package="catboost"
     ),
     "logreg_cal": ModelSpec("logreg_cal", "linear", _build_logreg_cal),
     "hist_gbdt_cal": ModelSpec("hist_gbdt_cal", "gbdt", _build_hist_gbdt_cal),
