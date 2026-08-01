@@ -194,3 +194,32 @@ def test_compute_envelopes_keeps_group_with_late_error_and_caps_rho() -> None:
     env = compute_envelopes(pd.DataFrame(rows))
     assert len(env) == 1
     assert env.iloc[0]["rho"] == 0.10
+
+
+# --------------------------------------------------------------------------- #
+# degenerate inputs
+# --------------------------------------------------------------------------- #
+def test_compute_aure_on_no_envelopes_keeps_its_schema() -> None:
+    """A run where every condition failed must not produce a column-less frame.
+
+    It happened: a cloud backend hit its daily quota, every condition errored, and
+    the resulting column-less frame crashed the caller with KeyError('model') far
+    from the cause.
+    """
+    empty = pd.DataFrame(columns=["model", "dataset_id", "shift_axis", "rho"])
+    out = compute_aure(empty)
+    assert out.empty
+    assert list(out.columns) == ["model", "aure", "n_envelopes"]
+    assert out.groupby("model").size().empty  # the call that used to raise
+
+
+def test_compute_envelopes_drops_groups_with_no_successful_run() -> None:
+    df = pd.DataFrame({
+        "model": ["m"] * 6,
+        "dataset_id": ["d"] * 6,
+        "shift_axis": ["ax"] * 6,
+        "shift_lambda": LAMBDAS,
+        "status": ["error"] * 6,
+        "failed": [True] * 6,
+    })
+    assert compute_envelopes(df).empty

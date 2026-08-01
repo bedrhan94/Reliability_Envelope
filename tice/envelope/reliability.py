@@ -122,8 +122,19 @@ def compute_envelopes(
     return pd.DataFrame(rows)
 
 
+AURE_COLUMNS = ["model", "aure", "n_envelopes"]
+
+
 def compute_aure(envelopes: pd.DataFrame) -> pd.DataFrame:
-    """Average ``rho`` per model (overall and per shift axis)."""
+    """Average ``rho`` per model (overall and per shift axis).
+
+    Returns an empty frame *with the schema* when there are no envelopes, rather
+    than a column-less one: a run in which every condition failed (a cloud backend
+    hitting its quota, say) otherwise produces a frame whose missing ``model``
+    column crashes the caller far from the cause.
+    """
+    if envelopes.empty:
+        return pd.DataFrame(columns=AURE_COLUMNS)
     rows: list[dict] = []
     for model, g in envelopes.groupby("model", sort=True):
         row: dict = {
