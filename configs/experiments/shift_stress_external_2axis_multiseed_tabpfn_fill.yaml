@@ -1,0 +1,75 @@
+# Fill the tabpfn_client gap in the multiseed primary run.
+# That run completed five of six models across all three seeds; tabpfn_client stopped at
+# 844 of 1584 conditions when the PriorLabs cloud returned HTTP 429 (daily cell-prediction
+# quota). This re-runs tabpfn_client alone across the same three seeds; the runner's
+# checkpoints make it resumable if the quota is hit again.
+seed: 42
+seeds: [42, 1337, 2025]
+output_dir: results/external/tables_2axis_multiseed_tabpfn_fill
+
+datasets:
+  - kr-vs-kp
+  - breast-w
+  - mfeat-fourier
+  - mfeat-karhunen
+  - mfeat-morphological
+  - mfeat-zernike
+  - mfeat-factors
+  - cmc
+  - credit-approval
+  - credit-g
+  - diabetes
+  - tic-tac-toe
+  - vehicle
+  - spambase
+  - analcatdata_authorship
+  - pc4
+  - pc3
+  - kc1
+  - pc1
+  - ilpd
+  - qsar-biodeg
+  - wdbc
+  - ozone-level-8hr
+  - phoneme
+  - steel-plates-fault
+  - wall-robot-navigation
+  - cnae-9
+  - first-order-theorem-proving
+  - churn
+  - texture
+  - optdigits
+  - pendigits
+  - satimage
+  - segment
+  - vowel
+  - climate-model-simulation-crashes
+  - car
+  - dna
+  - splice
+  - eucalyptus
+  - PhishingWebsites
+  - GesturePhaseSegmentation
+  - MiceProtein
+  - dresses-sales
+
+models:
+  - tabpfn_client
+
+shift_axes:
+  - label_noise
+  - covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost
+  - catboost
+max_context_rows: 10000
