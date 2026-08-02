@@ -1,5 +1,9 @@
 # Tabular In-Context Reliability Envelope
 
+> **Resuming this project on a new machine? Read [`HANDOFF.md`](HANDOFF.md) first.**
+> It covers where the work stands, the one run still outstanding, the traps that have
+> already cost time here, and which files are authoritative versus superseded.
+
 > When Tabular In-Context Learning Fails: A Contamination-Aware Reliability
 > Envelope under Distribution Shift
 
@@ -88,11 +92,12 @@ and `label_noise`.
 
 > **Read this before quoting AURE.** ρ requires an unbroken pass-run from λ=0 and the
 > failure triggers are absolute or shared, so a model whose *clean* state already sits
-> near the bar scores ρ=0 before any shift is applied — 33–44% of cells for
-> xgboost/hist_gbdt/logreg versus 0–14% for the ICL models. Under two reference-matched
+> near the bar scores ρ=0 before any shift is applied — 43% of cells for
+> xgboost/hist_gbdt/logreg versus 7–9% for the ICL models. Under two reference-matched
 > re-analyses of the same runs, the ICL lead **reverses** on all three evidence bases.
 > AURE conflates out-of-the-box calibration quality with shift tolerance; report it with
-> its reference policy. Quantified in [`results/ablations/`](results/ablations/) via
+> its reference policy. It factors exactly as `E[ρ] = P(pass at λ=0) × E[ρ | pass at λ=0]`,
+> and the ICL advantage sits entirely in the first term. Quantified in [`results/ablations/`](results/ablations/) via
 > `experiments/ablate_reference_confound.py` and `experiments/tau_lambda0_sensitivity.py`;
 > discussion in [`paper/claims.md`](paper/claims.md) §0.
 
@@ -126,6 +131,7 @@ All axes are deterministic, seed-fixed, and treat **λ=0 as an exact no-op**.
 ## Tests
 
 ```bash
-pytest            # test_dataset_profiler / test_shift_generators / test_reliability_envelope
+pytest            # 93 tests: profiler, shift generators, envelope, calibration metrics,
+                  # reference-confound ablation, run audit
 ruff check .
 ```
