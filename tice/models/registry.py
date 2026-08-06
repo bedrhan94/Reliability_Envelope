@@ -47,6 +47,25 @@ def _build_hist_gbdt(seed: int):
     return HistGradientBoostingClassifier(random_state=seed)
 
 
+def _gbdt_device_kwargs(lib: str) -> dict:
+    """GPU kwargs for a GBDT library when ``TICE_GBDT_DEVICE=cuda`` is set, else {} (CPU).
+
+    Added to run the heavy tuned/ensemble strong-baseline arm on the GPU without changing
+    the default CPU behaviour, so existing results and tests are untouched. Only XGBoost
+    and CatBoost are moved -- LightGBM's pip wheel is CPU-only. GridSearchCV uses n_jobs=1,
+    so CV fits hit the single GPU sequentially with no contention.
+    """
+    import os
+
+    if os.environ.get("TICE_GBDT_DEVICE", "").lower() != "cuda":
+        return {}
+    if lib == "xgboost":
+        return {"device": "cuda"}
+    if lib == "catboost":
+        return {"task_type": "GPU", "devices": "0"}
+    return {}
+
+
 def _build_xgboost(seed: int):
     from xgboost import XGBClassifier
 
@@ -57,6 +76,7 @@ def _build_xgboost(seed: int):
         eval_metric="logloss",
         random_state=seed,
         n_jobs=1,
+        **_gbdt_device_kwargs("xgboost"),
     )
 
 
@@ -69,6 +89,7 @@ def _build_catboost(seed: int):
         random_seed=seed,
         verbose=False,
         allow_writing_files=False,
+        **_gbdt_device_kwargs("catboost"),
     )
 
 
@@ -96,7 +117,8 @@ def _build_xgboost_tuned(seed: int):
     from xgboost import XGBClassifier
 
     base = XGBClassifier(
-        tree_method="hist", eval_metric="logloss", random_state=seed, n_jobs=1
+        tree_method="hist", eval_metric="logloss", random_state=seed, n_jobs=1,
+        **_gbdt_device_kwargs("xgboost"),
     )
     grid = {"n_estimators": [200, 600], "max_depth": [3, 6], "learning_rate": [0.05, 0.2]}
     return _tuned(base, grid, seed)
@@ -105,7 +127,10 @@ def _build_xgboost_tuned(seed: int):
 def _build_catboost_tuned(seed: int):
     from catboost import CatBoostClassifier
 
-    base = CatBoostClassifier(random_seed=seed, verbose=False, allow_writing_files=False)
+    base = CatBoostClassifier(
+        random_seed=seed, verbose=False, allow_writing_files=False,
+        **_gbdt_device_kwargs("catboost"),
+    )
     grid = {"iterations": [200, 600], "depth": [4, 6], "learning_rate": [0.03, 0.1]}
     return _tuned(base, grid, seed)
 

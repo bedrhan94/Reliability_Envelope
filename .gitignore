@@ -21,3 +21,12 @@ results/tables_backup_*/
 # Scratch dir created by a shell that failed to expand %TEMP% / $env:TEMP
 # (the multiseed smoke run landed here instead of the system temp dir).
 SERSBEDRHA~1APPDATAocaltemp/
+
+# LaTeX build artefacts (manuscript.pdf IS tracked -- it is the deliverable)
+paper/*.aux
+paper/*.out
+paper/*.log
+paper/*.toc
+
+# CatBoost scratch
+catboost_info/

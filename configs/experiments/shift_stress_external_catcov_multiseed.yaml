@@ -1,0 +1,81 @@
+# Tier 3 #8 FULL run: the new categorical_covariate_shift axis on all datasets with
+# categorical columns (the ~14 categorical/mixed of 44; numeric-only sets are marked
+# not-applicable and skipped by the runner), 6 models incl. local TabPFN, 3 seeds.
+# Closes limitation #13 (numeric covariate_shift is a no-op on all-categorical data) and
+# tests whether the covariate calibration-collapse mechanism (E2) generalises to
+# categorical inputs at scale. Resumable (per-seed checkpoints). GBDTs on CPU (fast at
+# defaults); TabPFN/TabICL on GPU. Overnight job.
+seed: 42
+seeds: [42, 1337, 2025]
+output_dir: results/external/tables_catcov_multiseed
+
+datasets:
+  - kr-vs-kp
+  - breast-w
+  - mfeat-fourier
+  - mfeat-karhunen
+  - mfeat-morphological
+  - mfeat-zernike
+  - mfeat-factors
+  - cmc
+  - credit-approval
+  - credit-g
+  - diabetes
+  - tic-tac-toe
+  - vehicle
+  - spambase
+  - analcatdata_authorship
+  - pc4
+  - pc3
+  - kc1
+  - pc1
+  - ilpd
+  - qsar-biodeg
+  - wdbc
+  - ozone-level-8hr
+  - phoneme
+  - steel-plates-fault
+  - wall-robot-navigation
+  - cnae-9
+  - first-order-theorem-proving
+  - churn
+  - texture
+  - optdigits
+  - pendigits
+  - satimage
+  - segment
+  - vowel
+  - climate-model-simulation-crashes
+  - car
+  - dna
+  - splice
+  - eucalyptus
+  - PhishingWebsites
+  - GesturePhaseSegmentation
+  - MiceProtein
+  - dresses-sales
+
+models:
+  - logreg
+  - hist_gbdt
+  - xgboost
+  - catboost
+  - tabicl
+  - tabpfn
+
+shift_axes:
+  - categorical_covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost
+  - catboost
+max_context_rows: 10000

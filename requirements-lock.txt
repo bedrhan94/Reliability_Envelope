@@ -11,8 +11,13 @@ pyyaml==6.0.3
 # GBDT reference backends
 xgboost==3.2.0
 catboost==1.2.10
+lightgbm==4.7.0  # strong-baselines arm (Table XVIII); current-machine version
 
-# ICL foundation-model backends (TabPFN via PriorLabs cloud client; TabICL local)
+# ICL foundation-model backends. TabPFN is run from LOCAL pinned weights (tabpfn 8.2.0)
+# for the multiseed benchmark -- this is version-pinnable, unlike the cloud client, which
+# is why the reproducibility limitation on the cloud backend is retired. tabpfn-client is
+# kept for the seed-42 6-model cloud comparison.
+tabpfn==8.2.0
 tabpfn-client==0.3.2
 tabicl==2.1.1
 torch==2.7.1+cu128

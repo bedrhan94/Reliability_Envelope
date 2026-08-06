@@ -1,0 +1,35 @@
+# GPU timing probe for the strong-baseline arm: one large (PhishingWebsites, 11055) and
+# one small (diabetes, 768) dataset, 5 strong models, both axes, seed 42. Run with
+# TICE_GBDT_DEVICE=cuda to check the tuned/ensemble GBDTs are actually fast on the GPU
+# before committing to the full 3-seed run. Throwaway output.
+seed: 42
+output_dir: results/external/strong_gpu_timing
+
+datasets:
+  - PhishingWebsites
+  - diabetes
+
+models:
+  - lightgbm
+  - xgboost_tuned
+  - catboost_tuned
+  - lightgbm_tuned
+  - gbdt_ensemble
+
+shift_axes:
+  - label_noise
+  - covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost_tuned
+  - catboost_tuned
+max_context_rows: 10000

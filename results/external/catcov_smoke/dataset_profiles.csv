@@ -1,0 +1,4 @@
+dataset_id,n_rows,n_features,n_classes,numeric_feature_ratio,categorical_feature_ratio,mean_cardinality,max_cardinality,class_imbalance_ratio,missing_rate,duplicate_rate,train_test_duplicate_rate,feature_shift_proxy
+car,1728,6,4,0.0,1.0,3.5,4.0,18.615384615384617,0.0,0.0,0.0,0.49276859010217205
+tic-tac-toe,958,9,2,0.0,1.0,3.0,3.0,1.8855421686746987,0.0,0.0,0.0,0.45202401249644103
+credit-approval,690,15,2,0.4,0.6,4.444444444444445,14.0,1.247557003257329,0.006473429951690821,0.0,0.0,0.5101869355177484

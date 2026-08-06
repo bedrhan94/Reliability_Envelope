@@ -138,6 +138,43 @@ def _covariate_shift(split: Split, lam: float, base_seed: int) -> Split:
     return out
 
 
+def _categorical_covariate_shift(split: Split, lam: float, base_seed: int) -> Split:
+    """Tilt the TEST categorical marginal toward rare *existing* training categories.
+
+    The numeric ``covariate_shift`` mean-shifts numeric features and is a no-op on
+    all-categorical datasets, so those are excluded from every covariate analysis. This is
+    the categorical analogue: for a fraction ``lam`` of TEST rows in each categorical column
+    it redraws the value from that column's categories with probability inversely
+    proportional to the training frequency, pushing the test input distribution into the
+    tail of the training distribution -- a P(X) shift within the known support. Labels are
+    left unchanged, exactly as the numeric mean-shift leaves them. Distinct from
+    ``rare_category_shift``, which injects an *unseen* token rather than shifting the
+    marginal among seen categories.
+    """
+    out = _copy_split(split)
+    if lam <= 0 or not split.categorical_columns:
+        return out
+    rng = make_rng(base_seed, split.dataset_id, "categorical_covariate_shift", lam)
+    X = out.X_test
+    n = len(X)
+    k = int(round(lam * n))
+    if k <= 0:
+        return out
+    for col in split.categorical_columns:
+        counts = out.X_train[col].value_counts()
+        cats = counts.index.to_numpy()
+        if cats.size < 2:
+            continue
+        # rare-favouring weights: inverse training frequency, normalised
+        weights = 1.0 / counts.to_numpy(dtype=float)
+        weights = weights / weights.sum()
+        idx = rng.choice(n, size=k, replace=False)
+        draws = rng.choice(cats, size=k, replace=True, p=weights)
+        X.loc[X.index[idx], col] = draws
+    out.X_test = X
+    return out
+
+
 def _context_budget(split: Split, lam: float, base_seed: int) -> Split:
     """Shrink the train context to a (1 - lam) stratified fraction."""
     out = _copy_split(split)
@@ -196,6 +233,13 @@ _SHIFTS: dict[str, Shift] = {
         requires_categorical=True,
     ),
     "covariate_shift": Shift("covariate_shift", "test_only", "real", _covariate_shift),
+    "categorical_covariate_shift": Shift(
+        "categorical_covariate_shift",
+        "test_only",
+        "conditional",
+        _categorical_covariate_shift,
+        requires_categorical=True,
+    ),
     "context_budget": Shift("context_budget", "train_only", "real", _context_budget),
 }
 

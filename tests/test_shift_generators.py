@@ -112,6 +112,32 @@ def test_rare_category_applicability_and_injection() -> None:
     assert not (shifted.X_train[cat_col] == RARE_TOKEN).any()
 
 
+def test_categorical_covariate_shift_tilts_toward_rare_seen_categories() -> None:
+    # not applicable on a purely numeric dataset
+    numeric = make_clean_split(load_dataset("breast_cancer"), base_seed=SEED)
+    assert is_applicable("categorical_covariate_shift", numeric) is False
+
+    mixed = _clean("synthetic_mixed")
+    assert is_applicable("categorical_covariate_shift", mixed) is True
+    shifted = apply_shift("categorical_covariate_shift", mixed, 0.40, SEED)
+    cat_col = mixed.categorical_columns[0]
+
+    # test marginal changed, but only among categories seen in training (no unseen token)
+    n_changed = int((shifted.X_test[cat_col].to_numpy() != mixed.X_test[cat_col].to_numpy()).sum())
+    assert n_changed > 0
+    assert RARE_TOKEN not in set(shifted.X_test[cat_col].unique())
+    assert set(shifted.X_test[cat_col].unique()).issubset(set(mixed.X_train[cat_col].unique()))
+
+    # the tilt moves test values toward rarer training categories: the mean training
+    # frequency of the test column drops (train and labels untouched)
+    freq = mixed.X_train[cat_col].value_counts(normalize=True)
+    before = float(mixed.X_test[cat_col].map(freq).mean())
+    after = float(shifted.X_test[cat_col].map(freq).mean())
+    assert after < before
+    assert_series_equal(shifted.y_test, mixed.y_test)
+    assert_frame_equal(shifted.X_train, mixed.X_train)
+
+
 def test_label_noise_amount_scales_with_lambda() -> None:
     clean = _clean()
     n = len(clean.y_train)

@@ -1,0 +1,81 @@
+# Tier 2 #5: extend the severity grid past 0.4 to relieve the right-censoring ceiling
+# (limitation #12: ~7% of external cells are censored at rho=0.40). Adds lambda 0.5/0.6/0.8
+# to the published grid; 6 models, 44 datasets, both axes, seed 42. Full fresh run (not a
+# merge) so the envelope + reference bar are self-consistent on the extended grid. AURE here
+# is on a 0..0.8 scale and is NOT comparable to the 0..0.4 runs; the question this answers is
+# whether relieving the ceiling changes the ordering / confound (it should not -- the confound
+# lives at lambda=0). TabPFN local weights on GPU; overnight-scale (~2-3h).
+seed: 42
+output_dir: results/external/tables_2axis_extlambda_seed42
+
+datasets:
+  - kr-vs-kp
+  - breast-w
+  - mfeat-fourier
+  - mfeat-karhunen
+  - mfeat-morphological
+  - mfeat-zernike
+  - mfeat-factors
+  - cmc
+  - credit-approval
+  - credit-g
+  - diabetes
+  - tic-tac-toe
+  - vehicle
+  - spambase
+  - analcatdata_authorship
+  - pc4
+  - pc3
+  - kc1
+  - pc1
+  - ilpd
+  - qsar-biodeg
+  - wdbc
+  - ozone-level-8hr
+  - phoneme
+  - steel-plates-fault
+  - wall-robot-navigation
+  - cnae-9
+  - first-order-theorem-proving
+  - churn
+  - texture
+  - optdigits
+  - pendigits
+  - satimage
+  - segment
+  - vowel
+  - climate-model-simulation-crashes
+  - car
+  - dna
+  - splice
+  - eucalyptus
+  - PhishingWebsites
+  - GesturePhaseSegmentation
+  - MiceProtein
+  - dresses-sales
+
+models:
+  - logreg
+  - hist_gbdt
+  - xgboost
+  - catboost
+  - tabicl
+  - tabpfn
+
+shift_axes:
+  - label_noise
+  - covariate_shift
+
+lambda_values: [0.00, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.80]
+
+test_size: 0.3
+ece_bins: 15
+thresholds:
+  tau_utility: 0.03
+  tau_ece: 0.10
+  tau_nll: 0.75
+gbdt_reference: clean
+gbdt_reference_models:
+  - xgboost
+  - catboost
+max_context_rows: 10000
