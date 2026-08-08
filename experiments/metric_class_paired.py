@@ -35,7 +35,10 @@ ROLE = {"aure": "admissibility", "robust_fraction": "admissibility",
         "abs_utility_area": "admissibility", "abs_ece_radius": "calibration_tolerance",
         "self_ref_radius": "calibration_tolerance", "utility_drop": "calibration_tolerance",
         "abs_auc_radius": "discrimination", "auc_retention": "discrimination"}
-BASES = ["external_primary", "external_strong", "external_uncapped", "pilot"]
+# external_3seed_primary is the current benchmark; external_primary is the superseded
+# seed-42 capped run, kept so the effect of the context-cap correction stays visible.
+BASES = ["external_3seed_primary", "external_strong", "external_uncapped",
+         "external_primary", "pilot"]
 
 
 def main() -> int:
