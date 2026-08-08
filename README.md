@@ -131,7 +131,7 @@ All axes are deterministic, seed-fixed, and treat **λ=0 as an exact no-op**.
 ## Tests
 
 ```bash
-pytest            # 93 tests: profiler, shift generators, envelope, calibration metrics,
+pytest            # 97 tests: profiler, shift generators, envelope, calibration metrics,
                   # reference-confound ablation, run audit
 ruff check .
 ```

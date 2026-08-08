@@ -5,13 +5,39 @@ curated set of public OpenML classification datasets. The full 44-dataset run **
 since been executed and merged** (Sprint 2 set up the infrastructure; the run and
 merge landed in Sprints 3–4).
 
+## Read this before quoting a number from any directory here
+
+The failure rule has three criteria and one of them is **relative** (utility below the best
+clean GBDT by more than τ_u). A directory produced by a **single-family** config — ICL-only
+or GBDT-only — has no reference to compare against, so `reference_utility` is NaN on every
+row and that criterion silently drops out. Nothing errors; the AURE just comes out too high.
+This already cost us a published number: TabPFN read 0.1195 in its own arm against 0.0888
+merged, an inflation of +0.0307 (manuscript §5.3 / Table XI, `claims.md` S2,
+`limitations.md` item 17).
+
+**Rule: never read an AURE off a `*_only`, `*_fill`, `*_tabpfn_local` or
+`*_strong_baselines*` directory.** They are merge inputs. Read numbers off the `*_merged`
+directory that folds them against the reference pool. To check any directory,
+`df.groupby('model').best_gbdt.notna().mean()` must be 1.0 for every model with
+`status == "ok"`. `tables_catcov_multiseed/` reports <100% but is benign — the uncovered
+rows are `applicable=False` / `skipped` non-categorical datasets.
+
 ## Which directory is which
+
+Rows marked **merge input only** are subject to the warning above.
 
 | Directory | Contents | Status |
 |---|---|---|
-| `tables_2axis_seed42_merged/` | **44 datasets × 6 models × seed 42 = 3168 rows.** The 5 token-less models plus the merged `tabpfn_client` cloud rows. | **Primary external result — cited by the paper.** |
+| `tables_2axis_multiseed_primary_with_tabpfn_local/` | **44 datasets × 2 axes × 6 λ × 3 seeds, all six models complete** (TabPFN from local pinned weights). | **Primary external result — cited by the paper (Tables IX–X).** |
+| `tables_2axis_multiseed_primary/` | The same three-seed run before the local-TabPFN merge. | Superseded; merge audit trail. |
+| `tables_2axis_multiseed_tabpfn_local/` | `tabpfn` local weights alone, 3 seeds, 1584 rows. | **Merge input only** (no GBDT reference). |
+| `tables_2axis_multiseed_tabpfn_fill/` | `tabpfn_client` cloud gap-fill, quota-limited. | **Merge input only**; source of the retracted 0.1199. |
+| `tables_2axis_strong_baselines_multiseed/` | 5 strengthened GBDTs × 3 seeds = 7920 rows, equal tuning budget plus `gbdt_ensemble`. | **Merge input only** (GBDT-only). |
+| `tables_2axis_strong_multiseed_merged/` | The above merged onto the primary base and re-scored against the strengthened reference (`merge_strong_multiseed.py`). | **Baseline-strength result at three seeds (Table XVIII).** |
+| `tables_2axis_strong_baselines/` · `tables_2axis_strong_merged/` | The single-seed predecessors of the two rows above. | Superseded by the three-seed arm; seed 42 reproduces bit-for-bit. |
+| `tables_2axis_seed42_merged/` | **44 datasets × 6 models × seed 42 = 3168 rows.** The 5 token-less models plus the merged `tabpfn_client` cloud rows. | Superseded as primary by the three-seed run; still cited for the seed-42 capped/uncapped contrast (Table V). |
 | `tables_2axis_seed42_partial/` | The same run before the TabPFN merge (5 models). | Superseded; kept as the merge audit trail. |
-| `tables_2axis_seed42_tabpfn_only/` | `tabpfn_client` alone; merged by `merge_tabpfn_client.py`. | Merge input only. |
+| `tables_2axis_seed42_tabpfn_only/` | `tabpfn_client` alone; merged by `merge_tabpfn_client.py`. | **Merge input only.** |
 | `tables_2axis_stratified_multiseed/` | **12 stratified datasets × 6 models × 3 seeds = 2592 rows.** | Supplementary seed-stability evidence. |
 | `tables_2axis_tuned_gbdt_only/` | `xgboost_tuned` / `catboost_tuned`, 12-dataset subset, seed 42. | Merge input only. |
 | `tables_2axis_tuned_gbdt_merged/` | The subset re-scored against **tuned** GBDT baselines (`merge_tuned_gbdt.py`). | Baseline-strength ablation. |
