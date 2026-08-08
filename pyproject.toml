@@ -1,9 +1,14 @@
 [project]
 name = "tice"
 version = "0.1.0"
-description = "Contamination-aware reliability envelope for tabular in-context learning under distribution shift"
+description = "Reliability envelopes for tabular models under distribution shift, and the calibration confound in threshold-based robustness metrics"
 readme = "README.md"
 requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Neslihan Aytac", email = "neslihanaytac@topkapi.edu.tr" },
+    { name = "Bedirhan Bedir", email = "bedirhanbedir@topkapi.edu.tr" },
+]
 dependencies = [
     "numpy>=1.24",
     "pandas>=2.0",

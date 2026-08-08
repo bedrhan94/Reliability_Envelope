@@ -6,6 +6,9 @@
 
 > **When Do Tabular In-Context Models Stay Reliable Under Shift?**
 > Calibration Confounding in Threshold-Based Reliability Envelopes
+>
+> Neslihan Aytac, Bedirhan Bedir — Istanbul Topkapi University
+> Under review at *Data Mining and Knowledge Discovery*.
 
 A reliability-envelope protocol for tabular models under controlled distribution shift,
 and the finding that came out of auditing it. The protocol sweeps a severity parameter λ
@@ -22,6 +25,27 @@ reference-matched failure rule the ordering reverses. See `paper/manuscript.md`.
 The package is `tice`; it covers the dataset profiler, the controlled shift stress
 suite, the reliability utility, GBDT reference selection, the failure indicator, the
 envelope radius ρ, and AURE.
+
+## The paper
+
+| File | What it is |
+|------|------------|
+| [`paper/manuscript.md`](paper/manuscript.md) | **Authoritative source.** All prose, tables, figure captions. |
+| [`paper/supplement.md`](paper/supplement.md) | Supplementary tables and figures, same discipline. |
+| `paper/manuscript.pdf`, `.tex`, `.docx` | Built outputs — regenerate, never hand-edit. |
+| [`paper/claims.md`](paper/claims.md) | What may and may not be said, with withdrawn claims and why. |
+| [`paper/limitations.md`](paper/limitations.md) | 17 items plus an analysis-disclosure statement. |
+
+```bash
+python paper/build_paper.py              # .tex + .docx + .pdf for both documents
+python paper/build_paper.py --anonymous  # -> *_anon.pdf for double-anonymous review
+python paper/check_paper.py              # float/citation/cross-reference consistency
+```
+
+`build_paper.py` exits non-zero on a LaTeX error, an undefined reference or an overfull
+box, so a clean exit means the PDFs are clean rather than merely produced.
+`check_paper.py` catches what LaTeX cannot see — a table cited by a number that has
+drifted, an orphaned supplementary float, a citation with no entry.
 
 ## Install
 
