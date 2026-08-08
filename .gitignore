@@ -9,10 +9,11 @@ dist/
 .pytest_cache/
 .ruff_cache/
 
-# Local editor / assistant settings (per-machine)
-.claude/
+# Per-machine editor and tool settings. The pattern is deliberately broad: local
+# config lives in dot-directories and must never be committed.
 .vscode/
 .idea/
+**/settings.local.json
 
 # Local result backups (the canonical run lives in results/tables/)
 results/tables_backup_*/
