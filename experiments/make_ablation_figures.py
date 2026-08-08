@@ -21,10 +21,15 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
 import pandas as pd
+
+# Springer asks for 600 dpi on combination art; 170 is fine for reading on screen.
+# Set TICE_FIG_DPI=600 before running to regenerate at submission resolution.
+FIG_DPI = int(os.environ.get("TICE_FIG_DPI", "170"))
 
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
@@ -51,14 +56,19 @@ VARIANT = {
 }
 INK, INK2, MUTED, GRID = "#0b0b0b", "#52514e", "#898781", "#e1e0d9"
 BASES = [
-    # The pilot row is the seed-42 grid, whose published-rule margin is +0.077; the
-    # +0.043 quoted in the abstract is the 10-seed average of the same rule. Spelling
-    # out the basis keeps the two numbers from reading as a contradiction.
-    ("pilot", "Pilot\n5 ds x 6 axes\n(seed-42 grid)"),
-    ("external_44", "External\n44 ds x 2 axes"),
+    # The three-seed primary benchmark leads: it is the basis the paper's headline and
+    # its refutation both sit on. The pilot row is the seed-42 grid, whose published-rule
+    # margin is +0.077; the +0.043 quoted in the abstract is the 10-seed average of the
+    # same rule. Spelling out the basis keeps the two numbers from reading as a
+    # contradiction.
+    ("external_primary_3seed", "External primary\n44 ds x 3 seeds"),
+    ("external_44", "External\n44 ds x 2 axes\n(seed 42)"),
     ("external_multiseed", "External subset\n12 ds x 3 seeds"),
+    ("pilot", "Pilot\n5 ds x 6 axes\n(seed-42 grid)"),
 ]
-ICL = ("tabicl", "tabpfn_client")
+# tabpfn_client is quota-limited and superseded by the local-weights `tabpfn` rows; on the
+# primary basis it covers 141 of 264 cells and would drag min-ICL down for the wrong reason.
+ICL = ("tabicl", "tabpfn", "tabpfn_client")
 GBDT = ("catboost", "xgboost", "hist_gbdt", "catboost_tuned", "xgboost_tuned")
 
 
@@ -192,7 +202,7 @@ def main(argv: list[str] | None = None) -> int:
 
     out = args.out or (args.ablations / "figures" / "reference_confound.png")
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=170, facecolor=fig.get_facecolor())
+    fig.savefig(out, dpi=FIG_DPI, facecolor=fig.get_facecolor())
     plt.close(fig)
     print(f"[ablation-fig] wrote {out}")
     print(margins.round(4).to_string(index=False))

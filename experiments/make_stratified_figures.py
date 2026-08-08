@@ -19,8 +19,13 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
+
+# Springer asks for 600 dpi on combination art; 150 is fine for reading on screen.
+# Set TICE_FIG_DPI=600 before running to regenerate at submission resolution.
+FIG_DPI = int(os.environ.get("TICE_FIG_DPI", "150"))
 
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
@@ -75,7 +80,7 @@ def plot_aure_ci(ms: pd.DataFrame, out: Path) -> bool:
     ax.set_title(f"Stratified external ({nd} datasets, {ns} seeds): AURE — dark=seed CI, light=dataset CI")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -101,7 +106,7 @@ def plot_label_noise_ci(sr: pd.DataFrame, out: Path) -> bool:
     ax.legend(fontsize=8, frameon=False, loc="lower left")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -126,7 +131,7 @@ def plot_covariate_ci(sr: pd.DataFrame, profiles: pd.DataFrame, out: Path) -> bo
     axL.legend(fontsize=8, frameon=False, loc="lower left")
     fig.suptitle("Stratified external: covariate shift — calibration degrades faster than discrimination")
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -145,7 +150,7 @@ def plot_margin_by_seed(aure_by_seed: pd.DataFrame, out: Path) -> bool:
     ax.set_title(f"ICL vs best-GBDT margin per seed (mean {margin.mean():+.3f})")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 

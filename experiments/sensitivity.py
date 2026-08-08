@@ -22,11 +22,16 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from itertools import product
 from pathlib import Path
 
 import pandas as pd
+
+# Springer asks for 600 dpi on combination art; 150 is fine for reading on screen.
+# Set TICE_FIG_DPI=600 before running to regenerate at submission resolution.
+FIG_DPI = int(os.environ.get("TICE_FIG_DPI", "150"))
 
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
@@ -136,7 +141,7 @@ def plot_sensitivity(sweep: pd.DataFrame, out: Path) -> None:
     axes[-1].legend(fontsize=8, frameon=False, loc="upper right")
     fig.suptitle("AURE threshold sensitivity (one-at-a-time; other two at default)")
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
 
 

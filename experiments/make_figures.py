@@ -21,9 +21,15 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")  # headless: never open a window
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+# Springer asks for 600 dpi on combination art; 150 is fine for reading on screen.
+# Set TICE_FIG_DPI=600 before running to regenerate at submission resolution.
+FIG_DPI = int(os.environ.get("TICE_FIG_DPI", "150"))
 
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
@@ -62,7 +68,7 @@ def plot_overall(df: pd.DataFrame, out: Path) -> None:
     ax.legend(handles, [f"{k} models" for k in _FAMILY_COLOR], loc="lower right", frameon=False)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
 
 
@@ -100,7 +106,7 @@ def plot_overall_ci(multiseed: pd.DataFrame, out: Path) -> None:
     ax.legend(handles, [f"{k} models" for k in _FAMILY_COLOR], loc="lower right", frameon=False)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
 
 
@@ -122,7 +128,7 @@ def plot_by_axis(df: pd.DataFrame, out: Path) -> None:
     ax.set_title("Where each model breaks — AURE per shift axis (green = robust)")
     fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02, label="axis AURE (ρ)")
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
 
 
@@ -179,7 +185,7 @@ def plot_calibration_collapse(
         f"({model} on {dataset}: AUC flat, NLL/ECE explode)"
     )
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -220,7 +226,7 @@ def plot_label_noise_robustness(shift_results: pd.DataFrame, out: Path) -> bool:
     ax.legend(loc="lower left", frameon=False, fontsize=9)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 

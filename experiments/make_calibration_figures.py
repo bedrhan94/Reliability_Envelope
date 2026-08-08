@@ -23,10 +23,15 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
 import pandas as pd
+
+# Springer asks for 600 dpi on combination art; 170 is fine for reading on screen.
+# Set TICE_FIG_DPI=600 before running to regenerate at submission resolution.
+FIG_DPI = int(os.environ.get("TICE_FIG_DPI", "170"))
 
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
@@ -136,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
                  x=0.006, ha="left", y=0.985)
     fig.tight_layout(rect=(0, 0, 1, 0.93))
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(args.out, dpi=170, facecolor=fig.get_facecolor())
+    fig.savefig(args.out, dpi=FIG_DPI, facecolor=fig.get_facecolor())
     plt.close(fig)
 
     print(f"[calib-fig] wrote {args.out}")

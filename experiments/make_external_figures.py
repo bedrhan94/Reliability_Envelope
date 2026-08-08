@@ -19,8 +19,13 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
+
+# Springer asks for 600 dpi on combination art; 150 is fine for reading on screen.
+# Set TICE_FIG_DPI=600 before running to regenerate at submission resolution.
+FIG_DPI = int(os.environ.get("TICE_FIG_DPI", "150"))
 
 _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
@@ -67,7 +72,7 @@ def plot_aure_2axis(aure: pd.DataFrame, out: Path) -> bool:
     ax.set_title("External validation — AURE per model (2-axis)")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -86,7 +91,7 @@ def plot_label_noise_auc(shift: pd.DataFrame, out: Path) -> bool:
     ax.legend(fontsize=8, frameon=False, loc="lower left")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -109,7 +114,7 @@ def plot_covariate_collapse(shift: pd.DataFrame, out: Path) -> bool:
     axL.legend(fontsize=8, frameon=False, loc="lower left")
     fig.suptitle("External: covariate shift — discrimination holds while calibration degrades")
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -134,7 +139,7 @@ def plot_profile_vs_failure(envelopes: pd.DataFrame, profiles: pd.DataFrame, out
         ax.annotate(str(r["dataset_id"])[:10], (x[r.name], r["mean_rho"]), fontsize=6, alpha=0.6)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
