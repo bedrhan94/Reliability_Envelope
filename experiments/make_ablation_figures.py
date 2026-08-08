@@ -45,6 +45,8 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+from tice.figio import save_figure  # noqa: E402
+
 # Categorical slots 1-3, validated (light + dark) with the data-viz palette
 # validator: lightness band, chroma floor, CVD separation and normal-vision
 # floor all pass. The aqua slot warns on light-surface contrast (2.74:1), which
@@ -202,7 +204,7 @@ def main(argv: list[str] | None = None) -> int:
 
     out = args.out or (args.ablations / "figures" / "reference_confound.png")
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=FIG_DPI, facecolor=fig.get_facecolor())
+    save_figure(fig, out, dpi=FIG_DPI, facecolor=fig.get_facecolor())
     plt.close(fig)
     print(f"[ablation-fig] wrote {out}")
     print(margins.round(4).to_string(index=False))

@@ -35,6 +35,7 @@ _ROOT = Path(__file__).resolve().parents[1]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+from tice.figio import save_figure  # noqa: E402
 from tice.models.registry import get_model_spec  # noqa: E402
 
 # Family -> colour. ICL foundation models pop; GBDTs share a family hue.
@@ -68,7 +69,7 @@ def plot_overall(df: pd.DataFrame, out: Path) -> None:
     ax.legend(handles, [f"{k} models" for k in _FAMILY_COLOR], loc="lower right", frameon=False)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
 
 
@@ -106,7 +107,7 @@ def plot_overall_ci(multiseed: pd.DataFrame, out: Path) -> None:
     ax.legend(handles, [f"{k} models" for k in _FAMILY_COLOR], loc="lower right", frameon=False)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
 
 
@@ -128,7 +129,7 @@ def plot_by_axis(df: pd.DataFrame, out: Path) -> None:
     ax.set_title("Where each model breaks — AURE per shift axis (green = robust)")
     fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02, label="axis AURE (ρ)")
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
 
 
@@ -185,7 +186,7 @@ def plot_calibration_collapse(
         f"({model} on {dataset}: AUC flat, NLL/ECE explode)"
     )
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -226,7 +227,7 @@ def plot_label_noise_robustness(shift_results: pd.DataFrame, out: Path) -> bool:
     ax.legend(loc="lower left", frameon=False, fontsize=9)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 

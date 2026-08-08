@@ -62,6 +62,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 from sklearn.pipeline import Pipeline  # noqa: E402
 
 from tice.datasets.registry import load_dataset, make_clean_split  # noqa: E402
+from tice.figio import save_figure  # noqa: E402
 from tice.metrics.classification import compute_metrics  # noqa: E402
 from tice.models.registry import get_model_spec  # noqa: E402
 from tice.models.runner import _align_proba  # noqa: E402
@@ -166,7 +167,7 @@ def plot_gap(df: pd.DataFrame, out: Path) -> None:
         "Train-label noise: ICL models retain clean-test ranking while GBDT baselines degrade faster"
     )
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
 
 

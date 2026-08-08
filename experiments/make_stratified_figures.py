@@ -42,6 +42,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
+from tice.figio import save_figure  # noqa: E402
 from tice.models.registry import get_model_spec  # noqa: E402
 
 _FAMILY_COLOR = {"icl": "#d1495b", "gbdt": "#4c72b0", "linear": "#8d99ae"}
@@ -80,7 +81,7 @@ def plot_aure_ci(ms: pd.DataFrame, out: Path) -> bool:
     ax.set_title(f"Stratified external ({nd} datasets, {ns} seeds): AURE — dark=seed CI, light=dataset CI")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -106,7 +107,7 @@ def plot_label_noise_ci(sr: pd.DataFrame, out: Path) -> bool:
     ax.legend(fontsize=8, frameon=False, loc="lower left")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -131,7 +132,7 @@ def plot_covariate_ci(sr: pd.DataFrame, profiles: pd.DataFrame, out: Path) -> bo
     axL.legend(fontsize=8, frameon=False, loc="lower left")
     fig.suptitle("Stratified external: covariate shift — calibration degrades faster than discrimination")
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -150,7 +151,7 @@ def plot_margin_by_seed(aure_by_seed: pd.DataFrame, out: Path) -> bool:
     ax.set_title(f"ICL vs best-GBDT margin per seed (mean {margin.mean():+.3f})")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 

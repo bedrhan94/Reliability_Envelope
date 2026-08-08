@@ -42,6 +42,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
+from tice.figio import save_figure  # noqa: E402
 from tice.models.registry import get_model_spec  # noqa: E402
 
 _FAMILY_COLOR = {"icl": "#d1495b", "gbdt": "#4c72b0", "linear": "#8d99ae"}
@@ -72,7 +73,7 @@ def plot_aure_2axis(aure: pd.DataFrame, out: Path) -> bool:
     ax.set_title("External validation — AURE per model (2-axis)")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -91,7 +92,7 @@ def plot_label_noise_auc(shift: pd.DataFrame, out: Path) -> bool:
     ax.legend(fontsize=8, frameon=False, loc="lower left")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -114,7 +115,7 @@ def plot_covariate_collapse(shift: pd.DataFrame, out: Path) -> bool:
     axL.legend(fontsize=8, frameon=False, loc="lower left")
     fig.suptitle("External: covariate shift — discrimination holds while calibration degrades")
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 
@@ -139,7 +140,7 @@ def plot_profile_vs_failure(envelopes: pd.DataFrame, profiles: pd.DataFrame, out
         ax.annotate(str(r["dataset_id"])[:10], (x[r.name], r["mean_rho"]), fontsize=6, alpha=0.6)
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
     return True
 

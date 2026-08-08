@@ -47,6 +47,7 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+from tice.figio import save_figure  # noqa: E402
 from tice.models.registry import get_model_spec  # noqa: E402
 
 # Categorical slots 1-3 of the validated palette, reused from the ablation figure so
@@ -141,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
                  x=0.006, ha="left", y=0.985)
     fig.tight_layout(rect=(0, 0, 1, 0.93))
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(args.out, dpi=FIG_DPI, facecolor=fig.get_facecolor())
+    save_figure(fig, args.out, dpi=FIG_DPI, facecolor=fig.get_facecolor())
     plt.close(fig)
 
     print(f"[calib-fig] wrote {args.out}")

@@ -49,6 +49,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 from tice.config import Thresholds  # noqa: E402
 from tice.envelope.reliability import compute_aure, compute_envelopes  # noqa: E402
+from tice.figio import save_figure  # noqa: E402
 from tice.models.registry import get_model_spec  # noqa: E402
 
 _DEFAULT = Thresholds()  # 0.03 / 0.10 / 0.75
@@ -141,7 +142,7 @@ def plot_sensitivity(sweep: pd.DataFrame, out: Path) -> None:
     axes[-1].legend(fontsize=8, frameon=False, loc="upper right")
     fig.suptitle("AURE threshold sensitivity (one-at-a-time; other two at default)")
     fig.tight_layout()
-    fig.savefig(out, dpi=FIG_DPI)
+    save_figure(fig, out, dpi=FIG_DPI)
     plt.close(fig)
 
 
