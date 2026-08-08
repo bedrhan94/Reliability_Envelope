@@ -1,9 +1,5 @@
 # reliability-envelope
 
-> **Resuming this project on a new machine? Read [`HANDOFF.md`](HANDOFF.md) first.**
-> It covers where the work stands, the traps that have already cost time here, and
-> which files are authoritative versus superseded.
-
 > **When Do Tabular In-Context Models Stay Reliable Under Shift?**
 > Calibration Confounding in Threshold-Based Reliability Envelopes
 >
@@ -20,32 +16,33 @@ under an explicit failure rule, and averages that radius into one number per mod
 (TabPFN, TabICL) lead the AURE ranking, but the ranking cannot be read as differential
 shift tolerance: AURE factors exactly into clean-state *admissibility* × conditional
 *tolerance*, and the entire in-context advantage sits in the first factor. Under a
-reference-matched failure rule the ordering reverses. See `paper/manuscript.md`.
+reference-matched failure rule the ordering reverses. The manuscript reporting this is under review and is not distributed here; the full protocol, every experiment script, and all per-condition results are.
 
 The package is `tice`; it covers the dataset profiler, the controlled shift stress
 suite, the reliability utility, GBDT reference selection, the failure indicator, the
 envelope radius ρ, and AURE.
 
-## The paper
+## Reproducing the results
 
-| File | What it is |
-|------|------------|
-| [`paper/manuscript.md`](paper/manuscript.md) | **Authoritative source.** All prose, tables, figure captions. |
-| [`paper/supplement.md`](paper/supplement.md) | Supplementary tables and figures, same discipline. |
-| `paper/manuscript.pdf`, `.tex`, `.docx` | Built outputs — regenerate, never hand-edit. |
-| [`paper/claims.md`](paper/claims.md) | What may and may not be said, with withdrawn claims and why. |
-| [`paper/limitations.md`](paper/limitations.md) | 17 items plus an analysis-disclosure statement. |
+Every number in the study is recomputable from this repository. The experiment drivers
+are under [`experiments/`](experiments/), their configurations under
+[`configs/experiments/`](configs/experiments/), and the stored per-condition tables under
+[`results/`](results/) — one row per (dataset x model x shift axis x severity x seed) with
+all metrics, the failure flag and its reason.
+
+The re-analyses run no models at all; they recompute from those stored tables:
 
 ```bash
-python paper/build_paper.py              # .tex + .docx + .pdf for both documents
-python paper/build_paper.py --anonymous  # -> *_anon.pdf for double-anonymous review
-python paper/check_paper.py              # float/citation/cross-reference consistency
+python experiments/ablate_reference_confound.py   # common support, self-referencing
+python experiments/decompose_aure.py              # the A*T factorisation
+python experiments/tau_lambda0_sensitivity.py     # 336-point threshold sweep
+python experiments/utility_weight_sensitivity.py  # calibration-share sweep
+python experiments/continuous_aure.py             # de-quantised radii
 ```
 
-`build_paper.py` exits non-zero on a LaTeX error, an undefined reference or an overfull
-box, so a clean exit means the PDFs are clean rather than merely produced.
-`check_paper.py` catches what LaTeX cannot see — a table cited by a number that has
-drifted, an orphaned supplementary float, a citation with no entry.
+[`results/external/README.md`](results/external/README.md) maps every results directory to
+what produced it, which are superseded, and — importantly — which are merge inputs that
+must not be read directly.
 
 ## Install
 
@@ -133,7 +130,7 @@ comparable, since the pilot pools six axes and the external run two.
 > its reference policy. It factors exactly as `E[ρ] = P(pass at λ=0) × E[ρ | pass at λ=0]`,
 > and the ICL advantage sits entirely in the first term. Quantified in [`results/ablations/`](results/ablations/) via
 > `experiments/ablate_reference_confound.py` and `experiments/tau_lambda0_sensitivity.py`;
-> discussion in [`paper/claims.md`](paper/claims.md) §0.
+> quantified in [`results/ablations/`](results/ablations/).
 >
 > **And never read an AURE off a single-family results directory.** An arm with no
 > gradient-boosted model leaves `reference_utility` NaN, so the relative failure criterion
