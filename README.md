@@ -86,20 +86,29 @@ python experiments/make_figures.py            # reads results/tables
 Renders two PNGs from `aure_summary.csv`: `aure_overall.png` (AURE per model,
 ranked and coloured by family) and `aure_by_axis.png` (per-shift-axis AURE
 heatmap — where each model breaks). Under the published failure rule the ICL
-foundation models (TabPFN, TabICL) score highest (AURE ≈ 0.24 on the pilot) versus
-the GBDT baselines (≈ 0.13–0.16), with the shared weak axes being `covariate_shift`
-and `label_noise`.
+foundation models score highest — on the pilot TabICL 0.236 and TabPFN 0.228 against
+CatBoost 0.185 and 0.111–0.133 for the rest — with the shared weak axes being
+`covariate_shift` and `label_noise`. On the three-seed external benchmark the numbers
+are much smaller (TabICL 0.0977, TabPFN 0.0888, best GBDT 0.0744): the two are **not**
+comparable, since the pilot pools six axes and the external run two.
 
 > **Read this before quoting AURE.** ρ requires an unbroken pass-run from λ=0 and the
 > failure triggers are absolute or shared, so a model whose *clean* state already sits
-> near the bar scores ρ=0 before any shift is applied — 43% of cells for
-> xgboost/hist_gbdt/logreg versus 7–9% for the ICL models. Under two reference-matched
+> near the bar scores ρ=0 before any shift is applied — 41–43% of cells for
+> xgboost/hist_gbdt/logreg versus 5–8% for the ICL models on the three-seed external
+> benchmark. Under two reference-matched
 > re-analyses of the same runs, the ICL lead **reverses** on all three evidence bases.
 > AURE conflates out-of-the-box calibration quality with shift tolerance; report it with
 > its reference policy. It factors exactly as `E[ρ] = P(pass at λ=0) × E[ρ | pass at λ=0]`,
 > and the ICL advantage sits entirely in the first term. Quantified in [`results/ablations/`](results/ablations/) via
 > `experiments/ablate_reference_confound.py` and `experiments/tau_lambda0_sensitivity.py`;
 > discussion in [`paper/claims.md`](paper/claims.md) §0.
+>
+> **And never read an AURE off a single-family results directory.** An arm with no
+> gradient-boosted model leaves `reference_utility` NaN, so the relative failure criterion
+> silently drops out and the radius comes out too high — this inflated TabPFN by +0.031
+> before we caught it. Merge into a table containing the reference pool first; see
+> [`results/external/README.md`](results/external/README.md).
 
 ## Key formulas (and where they live)
 
