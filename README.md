@@ -1,20 +1,27 @@
-# Tabular In-Context Reliability Envelope
+# reliability-envelope
 
 > **Resuming this project on a new machine? Read [`HANDOFF.md`](HANDOFF.md) first.**
-> It covers where the work stands, the one run still outstanding, the traps that have
-> already cost time here, and which files are authoritative versus superseded.
+> It covers where the work stands, the traps that have already cost time here, and
+> which files are authoritative versus superseded.
 
-> When Tabular In-Context Learning Fails: A Contamination-Aware Reliability
-> Envelope under Distribution Shift
+> **When Do Tabular In-Context Models Stay Reliable Under Shift?**
+> Calibration Confounding in Threshold-Based Reliability Envelopes
 
-Measures **where** tabular in-context / foundation models (TabPFN, TabICL v2)
-systematically break down relative to GBDT baselines (XGBoost, CatBoost) under
-controlled distribution shift — and turns that into a single number per model,
-the **AURE** (Average Reliability Envelope).
+A reliability-envelope protocol for tabular models under controlled distribution shift,
+and the finding that came out of auditing it. The protocol sweeps a severity parameter λ
+per (dataset, model, shift axis), records the largest λ a model survives contiguously
+under an explicit failure rule, and averages that radius into one number per model —
+**AURE** (Average Reliability Envelope).
 
-This repository covers milestones **M1–M3**: dataset profiler, controlled shift
-stress suite, reliability utility, GBDT reference selection, failure indicator,
-reliability envelope radius (ρ), and AURE.
+**The headline result is about the metric, not the models.** Tabular in-context models
+(TabPFN, TabICL) lead the AURE ranking, but the ranking cannot be read as differential
+shift tolerance: AURE factors exactly into clean-state *admissibility* × conditional
+*tolerance*, and the entire in-context advantage sits in the first factor. Under a
+reference-matched failure rule the ordering reverses. See `paper/manuscript.md`.
+
+The package is `tice`; it covers the dataset profiler, the controlled shift stress
+suite, the reliability utility, GBDT reference selection, the failure indicator, the
+envelope radius ρ, and AURE.
 
 ## Install
 
